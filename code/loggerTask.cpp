@@ -34,7 +34,7 @@ loggerTask::loggerTask(const std::string & taskName,double period):
     Delim= ',';
     FileNameBase = std::string("");
 
-    SavePath = std::string("/home/rems/exp/Logs/NetFT/");
+    SavePath = std::string("./");
     LogEnabled = false;
 
     ftReadings.SetSize(6);    

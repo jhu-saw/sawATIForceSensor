@@ -50,6 +50,7 @@ protected:
 private slots:
     void timerEvent(QTimerEvent * event);
     void RebiasFTSensor(void);
+    void LogClicked(void);
 
 private:
     //! setup TeleOperation controller GUI

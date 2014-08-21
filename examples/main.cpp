@@ -64,29 +64,33 @@ int main (int argc, char ** argv)
     devNetFTSensorATITask *ATINetFtTask = new devNetFTSensorATITask("AtiNetFtTask", 0.002);
     clientSocket *socket = new clientSocket("SocketConnect", 0.001);       // Continuous    
     mtsATINetFTQtWidget *sampleGUI = new mtsATINetFTQtWidget("ATINetFTGUI");
-//    loggerTask *logger = new loggerTask("ForceLogger", 0.02);
+    loggerTask *logger = new loggerTask("ForceLogger", 0.02);
 
     socket->SetIPAddress("192.168.1.1");      // IP address of the FT sensor
+    logger->SetSavePath("/home/kraven/dev/cisst_nri/build/cisst/bin/");
 
     taskManager->AddComponent(sampleGUI);        
     taskManager->AddComponent(ATINetFtTask);
     taskManager->AddComponent(socket);
-//    taskManager->AddComponent(logger);
+    taskManager->AddComponent(logger);
 
 
-    taskManager->Connect("ATINetFTGUI", "RequiresATINetFTSensor",
-                         "AtiNetFtTask","ProvidesATINetFTSensor");
+    taskManager->Connect("ATINetFTGUI"  , "RequiresATINetFTSensor",
+                         "AtiNetFtTask" , "ProvidesATINetFTSensor");
 
-    taskManager->Connect("AtiNetFtTask","RequiresSocket",
-                         "SocketConnect","ProvidesSocket");
+    taskManager->Connect("AtiNetFtTask" , "RequiresSocket",
+                         "SocketConnect", "ProvidesSocket");
+
+    taskManager->Connect("ATINetFTGUI", "RequiresFTLogger",
+                         "ForceLogger", "ProvidesFTLogger");
 
 
-//    taskManager->Connect("ForceLogger","RequiresATINetFTSensor",
-//                         "AtiNetFtTask","ProvidesATINetFTSensor");
+    taskManager->Connect("ForceLogger"  , "RequiresATINetFTSensor",
+                         "AtiNetFtTask" , "ProvidesATINetFTSensor");
 
 
-    taskManager->Connect("ATINetFTSensorProcess","AtiNetFtTask","RequiresLimitsAudio",
-                          "AudioProc","LimitsAudio","ProvidesLimitsAudio",3);
+    taskManager->Connect("ATINetFTSensorProcess", "AtiNetFtTask", "RequiresLimitsAudio",
+                          "AudioProc"           , "LimitsAudio" , "ProvidesLimitsAudio", 3);
 
 
     ATINetFtTask->Configure("/home/kraven/dev/cisst_nri/source/sawATINetFT/examples/NetFT15360.cal");

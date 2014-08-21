@@ -41,26 +41,17 @@ mtsATINetFTQtWidget::mtsATINetFTQtWidget(const std::string & componentName, doub
     // Setup CISST Interface
     mtsInterfaceRequired * interfaceRequired;
     interfaceRequired = AddInterfaceRequired("RequiresATINetFTSensor");
-//    if (interfaceRequired) {
-//        interfaceRequired->AddFunction("Enable", TeleOperation.Enable);
-//        interfaceRequired->AddFunction("SetScale", TeleOperation.SetScale);
-//        interfaceRequired->AddFunction("GetPositionCartesianMaster", TeleOperation.GetPositionCartesianMaster);
-//        interfaceRequired->AddFunction("GetPositionCartesianSlave", TeleOperation.GetPositionCartesianSlave);
-//        interfaceRequired->AddFunction("GetPeriodStatistics", TeleOperation.GetPeriodStatistics);
-//    }
-
-
     if(interfaceRequired) {
         interfaceRequired->AddFunction("GetFTData", NetFT.GetFTData);
         interfaceRequired->AddFunction("RebiasFTData", NetFT.RebiasFTData);
     }
 
-//    interfaceRequired = AddInterfaceRequired("RequiresFTLogger", MTS_OPTIONAL);
+    interfaceRequired = AddInterfaceRequired("RequiresFTLogger", MTS_OPTIONAL);
 
-//    if(interfaceRequired) {
-//        interfaceRequired->AddFunction("SetLogEnabled", NetFT.SetLogEnabled);
-//        interfaceRequired->AddFunction("GetLogEnabled", NetFT.GetLogEnabled);
-//    }
+    if(interfaceRequired) {
+        interfaceRequired->AddFunction("SetLogEnabled", NetFT.SetLogEnabled);
+        interfaceRequired->AddFunction("GetLogEnabled", NetFT.GetLogEnabled);
+    }
 
     setupUi();
     startTimer(TimerPeriodInMilliseconds);
@@ -98,7 +89,6 @@ void mtsATINetFTQtWidget::closeEvent(QCloseEvent * event)
     }
 }
 
-#if 1
 void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
 {
     // make sure we should update the display
@@ -119,48 +109,29 @@ void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
     QFTSensorValues->SetValue(FTReadings);
     QFTSensorValues->setHorizontalHeaderLabels(heading);
 
-//    executionResult = NetFT.GetLogEnabled(LogEnabled);
-//    if (!executionResult) {
-//        CMN_LOG_CLASS_RUN_ERROR << "NetFT.GetLogEnabled failed, \""
-//                                << executionResult << "\"" << std::endl;
-//    }
-
-}
-
-#else
-void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
-{
-    // make sure we should update the display
-    if (this->isHidden()) {
-        return;
-    }
-
-    mtsExecutionResult executionResult;
-    executionResult = TeleOperation.GetPositionCartesianMaster(PositionMaster);
+    executionResult = NetFT.GetLogEnabled(LogEnabled);
     if (!executionResult) {
-        CMN_LOG_CLASS_RUN_ERROR << "TeleOperation.GetPositionCartesianMaster failed, \""
+        CMN_LOG_CLASS_RUN_ERROR << "NetFT.GetLogEnabled failed, \""
                                 << executionResult << "\"" << std::endl;
     }
-    executionResult = TeleOperation.GetPositionCartesianSlave(PositionSlave);
-    if (!executionResult) {
-        CMN_LOG_CLASS_RUN_ERROR << "TeleOperation.GetPositionCartesianSlave failed, \""
-                                << executionResult << "\"" << std::endl;
-    }
-    QFRPositionMasterWidget->SetValue(PositionMaster.Position());
-    QFRPositionSlaveWidget->SetValue(PositionSlave.Position());
 
-    TeleOperation.GetPeriodStatistics(IntervalStatistics);
-    QMIntervalStatistics->SetValue(IntervalStatistics);
 }
-#endif
 
 void mtsATINetFTQtWidget::RebiasFTSensor(void)
 {
     NetFT.RebiasFTData();
 }
 
+void mtsATINetFTQtWidget::LogClicked(void)
+{
+    if (LogEnabled.Data)
+        LogEnabled.Data = false;
+    else
+        LogEnabled.Data = true;
 
-#if 1
+    NetFT.SetLogEnabled(LogEnabled);
+}
+
 void mtsATINetFTQtWidget::setupUi()
 {
     QFont font;
@@ -185,6 +156,7 @@ void mtsATINetFTQtWidget::setupUi()
     QHBoxLayout *buttonLayout = new QHBoxLayout;
 
     logButton = new QPushButton("Log Data");
+
     buttonLayout->addWidget(logButton);
 
     rebiasButton = new QPushButton("Rebias");
@@ -206,77 +178,5 @@ void mtsATINetFTQtWidget::setupUi()
 
     // setup Qt Connection
     connect(rebiasButton, SIGNAL(clicked()), this, SLOT(RebiasFTSensor()));
-//    connect(enableCheckbox, SIGNAL(clicked(bool)), this, SLOT(SlotEnableTeleop(bool)));
-//    connect(scaleSpinbox, SIGNAL(valueChanged(double)), this, SLOT(SlotSetScale(double)));
+    connect(logButton   , SIGNAL(clicked()), this, SLOT(LogClicked())    );
 }
-
-#else
-void mtsATINetFTQtWidget::setupUi(void)
-{
-    QFont font;
-    font.setBold(true);
-    font.setPointSize(12);
-
-//    QGridLayout * cmdTitleLayout = new QGridLayout;
-//    QSpacerItem * cmdTitleLeftSpacer = new QSpacerItem(341, 20, QSizePolicy::Expanding);
-//    QSpacerItem * cmdTitleRightSpacer = new QSpacerItem(341, 20, QSizePolicy::Expanding);
-//    cmdTitleLayout->addItem(cmdTitleLeftSpacer, 0, 0);
-//    cmdTitleLayout->addItem(cmdTitleRightSpacer, 0, 2);
-
-//    QFrame * cmdTitleLeftLine = new QFrame;
-//    cmdTitleLeftLine->setFrameShape(QFrame::HLine);
-//    cmdTitleLeftLine->setFrameShadow(QFrame::Sunken);
-//    QFrame * cmdTitleRightLine = new QFrame;
-//    cmdTitleRightLine->setFrameShape(QFrame::HLine);
-//    cmdTitleRightLine->setFrameShadow(QFrame::Sunken);
-//    QLabel * cmdTitleLabel = new QLabel("TeleOperation Controller");
-//    cmdTitleLabel->setFont(font);
-//    cmdTitleLabel->setAlignment(Qt::AlignCenter);
-
-//    cmdTitleLayout->addWidget(cmdTitleLeftLine, 1, 0);
-//    cmdTitleLayout->addWidget(cmdTitleLabel, 1, 1);
-//    cmdTitleLayout->addWidget(cmdTitleRightLine, 1, 2);
-
-//    QGridLayout * frameLayout = new QGridLayout;
-//    QFRPositionMasterWidget = new vctQtWidgetFrameDoubleRead(vctQtWidgetRotationDoubleRead::OPENGL_WIDGET);
-//    frameLayout->addWidget(QFRPositionMasterWidget, 0, 0);
-//    QFRPositionSlaveWidget = new vctQtWidgetFrameDoubleRead(vctQtWidgetRotationDoubleRead::OPENGL_WIDGET);
-//    frameLayout->addWidget(QFRPositionSlaveWidget, 1, 0);
-
-
-    QVBoxLayout * controlLayout = new QVBoxLayout;
-
-    QLabel * instructionsLabel = new QLabel("To start tele-operation you must first insert the tool past the cannula tip (push tool clutch button and manually insert tool).\nYou must keep your right foot on the COAG/MONO pedal to operate.\nYou can use the clutch pedal to re-position your masters.");
-    controlLayout->addWidget(instructionsLabel);
-
-    // enable/disable teleoperation
-    QCheckBox * enableCheckbox = new QCheckBox("Enable");
-    controlLayout->addWidget(enableCheckbox);
-
-    // scale
-    QDoubleSpinBox * scaleSpinbox = new QDoubleSpinBox();
-    scaleSpinbox->setRange(0.1, 0.5);
-    scaleSpinbox->setSingleStep(0.1);
-    scaleSpinbox->setPrefix("scale ");
-    scaleSpinbox->setValue(0.2);
-    controlLayout->addWidget(scaleSpinbox);
-
-    // Timing
-    QMIntervalStatistics = new mtsQtWidgetIntervalStatistics();
-    controlLayout->addWidget(QMIntervalStatistics);
-
-    controlLayout->addStretch();
-
-    QHBoxLayout * mainLayout = new QHBoxLayout;
-    mainLayout->addLayout(controlLayout);
-
-    setLayout(mainLayout);
-
-    setWindowTitle("TeleOperation Controller");
-    resize(sizeHint());
-
-    // setup Qt Connection
-    connect(enableCheckbox, SIGNAL(clicked(bool)), this, SLOT(SlotEnableTeleop(bool)));
-    connect(scaleSpinbox, SIGNAL(valueChanged(double)), this, SLOT(SlotSetScale(double)));
-}
-#endif
