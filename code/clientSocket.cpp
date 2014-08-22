@@ -114,6 +114,17 @@ void clientSocket::CheckSocketConnection(void)
         IsConnected.Data = true;    
 }
 
+void clientSocket::RetrySocketConnection(const mtsInt &numOfSecs)
+{
+    CMN_LOG_RUN_WARNING << "Retrying Socket Connection " << std::endl;
+
+    CloseSocket();
+    if(CreateSocket())
+        ConnectToSocket();
+
+    osaSleep(numOfSecs.Data);
+}
+
 void clientSocket::ConnectToSocket(void)
 {
     *(uint16*)&request[0] = htons(0x1234); /* standard header. */
@@ -162,26 +173,4 @@ void clientSocket::GetReadings(void)
 void clientSocket::RebiasFTValues(void)
 {
     initialFTData.Assign(RawFTData);
-}
-
-void clientSocket::RetrySocketConnection(const mtsInt &numOfSecs)
-{
-    CMN_LOG_RUN_WARNING << "Retrying Socket Connection " << std::endl;
-
-    CloseSocket();
-    if(CreateSocket())
-        ConnectToSocket();
-
-    osaSleep(numOfSecs.Data);
-}
-
-
-void clientSocket::print(mtsDoubleVec &values, int num, std::string name)
-{
-    std::cout << name;
-    for (int i = 0; i < num; ++i)
-    {
-        std::cout << values[i] << " ";
-    }
-    std::cout << std::endl;
 }

@@ -44,6 +44,7 @@ mtsATINetFTQtWidget::mtsATINetFTQtWidget(const std::string & componentName, doub
     if(interfaceRequired) {
         interfaceRequired->AddFunction("GetFTData", NetFT.GetFTData);
         interfaceRequired->AddFunction("RebiasFTData", NetFT.RebiasFTData);
+        interfaceRequired->AddFunction("GetIsSaturated", NetFT.GetIsSaturated);
     }
 
     interfaceRequired = AddInterfaceRequired("RequiresFTLogger", MTS_OPTIONAL);
@@ -108,6 +109,12 @@ void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
 
     QFTSensorValues->SetValue(FTReadings);
     QFTSensorValues->setHorizontalHeaderLabels(heading);
+
+    executionResult = NetFT.GetIsSaturated(IsSaturated);
+    if (!executionResult) {
+        CMN_LOG_CLASS_RUN_ERROR << "NetFT.GetIsSaturated failed, \""
+                                << executionResult << "\"" << std::endl;
+    }
 
     executionResult = NetFT.GetLogEnabled(LogEnabled);
     if (!executionResult) {

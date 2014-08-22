@@ -71,6 +71,7 @@ protected:
         mtsFunctionWrite    SetLogEnabled;
         mtsFunctionRead     GetLogEnabled;
         mtsFunctionRead     GetFTData;
+        mtsFunctionRead     GetIsSaturated;
     } NetFT;
 
 
@@ -78,6 +79,7 @@ private:
 
     mtsDoubleVec    FTReadings;
     mtsBool         LogEnabled;
+    mtsBool         IsSaturated;
     vctQtWidgetDynamicVectorDoubleRead *QFTSensorValues;
     QPushButton *logButton;
     QPushButton *rebiasButton;

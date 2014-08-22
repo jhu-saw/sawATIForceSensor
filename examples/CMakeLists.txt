@@ -30,7 +30,8 @@ if (cisst_FOUND_AS_REQUIRED)
 
   # load cisst configuration
   INCLUDE(${CISST_USE_FILE})
-  #INCLUDE(${QT_USE_FILE})
+
+  cisst_find_saw_component (sawTextToSpeech REQUIRED)
 
   # sawATINetFT has been compiled within cisst, we should find it automatically
   cisst_find_saw_component( sawATINetFT REQUIRED )
@@ -38,8 +39,11 @@ if (cisst_FOUND_AS_REQUIRED)
   if( sawATINetFT_FOUND )
 
     # sawATINetFT configuration
-    include_directories( ${sawATINetFT_INCLUDE_DIR} )
-    link_directories( ${sawATINetFT_LIBRARY_DIR} )
+    include_directories( ${sawATINetFT_INCLUDE_DIR}
+                         ${sawTextToSpeech_INCLUDE_DIR} )
+
+    link_directories( ${sawATINetFT_LIBRARY_DIR}
+                      ${sawTextToSpeech_LIBRARY_DIR})
         
 
     if( CISST_HAS_QT )
@@ -48,9 +52,9 @@ if (cisst_FOUND_AS_REQUIRED)
                       )
 
         # link against non cisst libraries and cisst components
-        target_link_libraries( sawATINetFTExample                                                              
+        target_link_libraries( sawATINetFTExample
                                ${sawATINetFT_LIBRARIES}
-                             )
+                               ${sawTextToSpeech_LIBRARIES})
 
         # link against cisst libraries (and dependencies)
         cisst_target_link_libraries( sawATINetFTExample ${REQUIRED_CISST_LIBRARIES} )

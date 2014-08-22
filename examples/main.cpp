@@ -23,6 +23,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstCommon.h>
 #include <cisstOSAbstraction.h>
 #include <cisstMultiTask/mtsQtApplication.h>
+#include <sawTextToSpeech/mtsTextToSpeech.h>
 
 #include <sawATINetFT/clientSocket.h>
 #include <sawATINetFT/loggerTask.h>
@@ -65,6 +66,9 @@ int main (int argc, char ** argv)
     clientSocket *socket = new clientSocket("SocketConnect", 0.001);       // Continuous    
     mtsATINetFTQtWidget *sampleGUI = new mtsATINetFTQtWidget("ATINetFTGUI");
     loggerTask *logger = new loggerTask("ForceLogger", 0.02);
+    mtsTextToSpeech* textToSpeech = new mtsTextToSpeech;
+
+    textToSpeech->AddInterfaceRequiredForEventString("ErrorMsg", "RobotErrorMsg");
 
     socket->SetIPAddress("192.168.1.1");      // IP address of the FT sensor
     logger->SetSavePath("/home/kraven/dev/cisst_nri/build/cisst/bin/");
@@ -72,7 +76,11 @@ int main (int argc, char ** argv)
     taskManager->AddComponent(sampleGUI);        
     taskManager->AddComponent(ATINetFtTask);
     taskManager->AddComponent(socket);
-    taskManager->AddComponent(logger);
+    taskManager->AddComponent(logger);    
+    taskManager->AddComponent(textToSpeech);
+
+
+    taskManager->Connect(textToSpeech->GetName(), "ErrorMsg", "AtiNetFtTask", "ProvidesATINetFTSensor");
 
 
     taskManager->Connect("ATINetFTGUI"  , "RequiresATINetFTSensor",
@@ -87,11 +95,6 @@ int main (int argc, char ** argv)
 
     taskManager->Connect("ForceLogger"  , "RequiresATINetFTSensor",
                          "AtiNetFtTask" , "ProvidesATINetFTSensor");
-
-
-    taskManager->Connect("ATINetFTSensorProcess", "AtiNetFtTask", "RequiresLimitsAudio",
-                          "AudioProc"           , "LimitsAudio" , "ProvidesLimitsAudio", 3);
-
 
     ATINetFtTask->Configure("/home/kraven/dev/cisst_nri/source/sawATINetFT/examples/NetFT15360.cal");
 

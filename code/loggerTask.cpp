@@ -152,6 +152,6 @@ void loggerTask::Configure(const std::string &filename)
 
 void loggerTask::SetSavePath(const std::string &path)
 {
-    CMN_LOG_CLASS_INIT_VERBOSE<< "Setting path" << path << std::endl;
+    CMN_LOG_CLASS_INIT_VERBOSE<< "Setting Logger Path to (" << path << ")" << std::endl;
     SavePath = path;
 }

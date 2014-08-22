@@ -67,8 +67,7 @@ protected:
     void ConnectToSocket(void);
     void GetReadings(void);
     void RebiasFTValues(void);
-    void RetrySocketConnection(const mtsInt &numOfSecs);    
-    void print(mtsDoubleVec &values, int num, std::string name);
+    void RetrySocketConnection(const mtsInt &numOfSecs);        
 
 private:
 

@@ -57,6 +57,8 @@ TimeServer(mtsTaskManager::GetInstance()->GetTimeServer())
         ftInterface->AddCommandWrite(&devNetFTSensorATITask::SetTransform, this, "SetTransform", mtsDoubleVec(6));
         ftInterface->AddCommandVoid(&devNetFTSensorATITask::Rebias, this, "RebiasFTData");
         ftInterface->AddCommandRead(&mtsStateTable::GetIndexReader, &StateTable, "GetTableIndex");
+
+        ftInterface->AddEventWrite(EventTriggers.RobotErrorMsg, "RobotErrorMsg", std::string(""));
     }
 
     StateTable.Advance();
@@ -70,19 +72,13 @@ TimeServer(mtsTaskManager::GetInstance()->GetTimeServer())
         socketInterface->AddFunction("RebiasFTValues", RebiasFTValues);        
         socketInterface->AddFunction("GetSocketStatus", GetSocketStatus);
     }
-
-    mtsInterfaceRequired *audioInterface = AddInterfaceRequired("RequiresLimitsAudio", MTS_OPTIONAL);
-
-    if(audioInterface)
-    {
-        audioInterface->AddFunction("PlayClip", PlayClip);
-        audioInterface->AddFunction("StopClip", StopClip);
-    }
 }
 
 void devNetFTSensorATITask::Rebias()
 {
     RebiasFTValues();
+    EventTriggers.RobotErrorMsg(std::string("Sensor ReBiased"));
+    CMN_LOG_CLASS_INIT_WARNING << "FT Sensor Rebiased " << std::endl;
 }
 
 void devNetFTSensorATITask::Configure(const std::string & filename)
@@ -161,5 +157,7 @@ void devNetFTSensorATITask::SaturationCheck()
     }    
 
     if(IsSaturated.Data)
-        PlayClip(mtsStdString("Clip2"));    
+    {
+        EventTriggers.RobotErrorMsg(std::string("Saturated"));
+    }
 }

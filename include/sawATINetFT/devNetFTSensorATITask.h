@@ -67,12 +67,9 @@ public:
 
 protected:
 
-    mtsFunctionWrite    PlayClip;
-    mtsFunctionWrite    StopClip;
-
     mtsDoubleVec    FTData;
     mtsBool         IsSaturated;
-    mtsBool IsConnected;
+    mtsBool         IsConnected;
 
     devNetFTSensorATI *FTSensorATI;
 
@@ -81,6 +78,12 @@ protected:
     void SaturationCheck();
 
 private:
+
+    // Functions for events
+    struct {
+        mtsFunctionWrite RobotErrorMsg;
+    } EventTriggers;
+
     const osaTimeServer  &TimeServer;
     mtsDouble TimeStamp;
 
