@@ -41,11 +41,7 @@ TimeServer(mtsTaskManager::GetInstance()->GetTimeServer())
 
     StateTable.AddData(FTData, "FTData");
     StateTable.AddData(IsSaturated, "IsSaturated");
-    StateTable.AddData(IsConnected, "IsConnected");
-
-    FTData.AutomaticTimestamp() = false;
-    IsSaturated.Data = false;
-    IsConnected.AutomaticTimestamp() = false;
+    StateTable.AddData(IsConnected, "IsConnected");        
 
     if(ftInterface)
     {
@@ -93,13 +89,12 @@ void devNetFTSensorATITask::Run(void)
     ProcessQueuedCommands();
     GetSocketStatus(IsConnected);
     TimeStamp = TimeServer.GetAbsoluteTimeInSeconds();
-    if(IsConnected.Data)
+    if(IsConnected)
     {
         GetFTReadings(FTData);
         FTData.Timestamp() = TimeStamp;
         SaturationCheck();
     }
-
 }
 
 void devNetFTSensorATITask::Startup(void)

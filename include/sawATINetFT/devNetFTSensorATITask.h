@@ -69,7 +69,7 @@ protected:
 
     mtsDoubleVec    FTData;
     mtsBool         IsSaturated;
-    mtsBool         IsConnected;
+    bool            IsConnected;
 
     devNetFTSensorATI *FTSensorATI;
 
