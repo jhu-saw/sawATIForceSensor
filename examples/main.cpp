@@ -25,14 +25,11 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstMultiTask/mtsQtApplication.h>
 #include <sawTextToSpeech/mtsTextToSpeech.h>
 
-#include <sawATINetFT/clientSocket.h>
+#include <sawATINetFT/mtsATINetFTSensor.h>
 #include <sawATINetFT/loggerTask.h>
-#include <sawATINetFT/devNetFTSensorATITask.h>
-
 
 // Qt include
 #include <sawATINetFT/mtsATINetFTQtWidget.h>
-
 
 
 const std::string GlobalComponentManagerAddress = "127.0.0.1";
@@ -41,12 +38,9 @@ int main (int argc, char ** argv)
 {
 
     cmnLogger::SetMask(CMN_LOG_ALLOW_ALL);
-    cmnLogger::AddChannel(std::cout, CMN_LOG_ALLOW_ALL);
-    cmnLogger::SetMaskClassMatching("devNetFTSensorATITask", CMN_LOG_ALLOW_VERBOSE | CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
-    cmnLogger::SetMaskClassMatching("devNetFTSensorATI", CMN_LOG_ALLOW_VERBOSE | CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
+    cmnLogger::AddChannel(std::cout, CMN_LOG_ALLOW_ALL);    
     cmnLogger::SetMaskClassMatching("osaTimeServer", CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
-    cmnLogger::SetMaskClass("cmnThrow", CMN_LOG_ALLOW_ALL);
-    cmnLogger::SetMaskClass("osaSocket", CMN_LOG_LEVEL_NONE);
+    cmnLogger::SetMaskClass("cmnThrow", CMN_LOG_ALLOW_ALL);    
 
     mtsTaskManager * taskManager;
     try {
@@ -62,41 +56,33 @@ int main (int argc, char ** argv)
     qtAppTask->Configure();
     taskManager->AddComponent(qtAppTask);
 
-    devNetFTSensorATITask *ATINetFtTask = new devNetFTSensorATITask("AtiNetFtTask", 0.002);
-    clientSocket *socket = new clientSocket("SocketConnect", 0.001);       // Continuous    
-    mtsATINetFTQtWidget *sampleGUI = new mtsATINetFTQtWidget("ATINetFTGUI");
-    loggerTask *logger = new loggerTask("ForceLogger", 0.02);
+    mtsATINetFTSensor *netFTTask = new mtsATINetFTSensor("ATINetFTTask");       // Continuous
+    mtsATINetFTQtWidget *netFTGui = new mtsATINetFTQtWidget("ATINetFTGUI");
+    loggerTask *netFTLogger = new loggerTask("ATINetFTLogger", 0.02);
     mtsTextToSpeech* textToSpeech = new mtsTextToSpeech;
 
     textToSpeech->AddInterfaceRequiredForEventString("ErrorMsg", "RobotErrorMsg");
+    textToSpeech->SetPreemptive(true);
 
-    socket->SetIPAddress("192.168.1.1");      // IP address of the FT sensor
-    logger->SetSavePath("/home/kraven/dev/cisst_nri/build/cisst/bin/");
+    netFTTask->SetIPAddress("192.168.1.1");      // IP address of the FT sensor
+    netFTLogger->SetSavePath("/home/kraven/dev/cisst_nri/build/cisst/bin/");
 
-    taskManager->AddComponent(sampleGUI);        
-    taskManager->AddComponent(ATINetFtTask);
-    taskManager->AddComponent(socket);
-    taskManager->AddComponent(logger);    
+    taskManager->AddComponent(netFTGui);
+    taskManager->AddComponent(netFTTask);
+    taskManager->AddComponent(netFTLogger);
     taskManager->AddComponent(textToSpeech);
 
 
-    taskManager->Connect(textToSpeech->GetName(), "ErrorMsg", "AtiNetFtTask", "ProvidesATINetFTSensor");
+    taskManager->Connect(textToSpeech->GetName(), "ErrorMsg", "ATINetFTTask", "ProvidesATINetFTSensor");
 
+    taskManager->Connect("ATINetFTGUI"      , "RequiresATINetFTSensor",
+                         "ATINetFTTask"     , "ProvidesATINetFTSensor");
 
-    taskManager->Connect("ATINetFTGUI"  , "RequiresATINetFTSensor",
-                         "AtiNetFtTask" , "ProvidesATINetFTSensor");
+    taskManager->Connect("ATINetFTGUI"      , "RequiresFTLogger",
+                         "ATINetFTLogger"   , "ProvidesFTLogger");
 
-    taskManager->Connect("AtiNetFtTask" , "RequiresSocket",
-                         "SocketConnect", "ProvidesSocket");
-
-    taskManager->Connect("ATINetFTGUI", "RequiresFTLogger",
-                         "ForceLogger", "ProvidesFTLogger");
-
-
-    taskManager->Connect("ForceLogger"  , "RequiresATINetFTSensor",
-                         "AtiNetFtTask" , "ProvidesATINetFTSensor");
-
-    ATINetFtTask->Configure("/home/kraven/dev/cisst_nri/source/sawATINetFT/examples/NetFT15360.cal");
+    taskManager->Connect("ATINetFTLogger"   , "RequiresATINetFTSensor",
+                         "ATINetFTTask"     , "ProvidesATINetFTSensor");
 
     taskManager->CreateAllAndWait(2.0 * cmn_s);
     taskManager->StartAllAndWait(2.0 * cmn_s);
@@ -105,10 +91,10 @@ int main (int argc, char ** argv)
     taskManager->KillAllAndWait(2.0 * cmn_s);
     taskManager->Cleanup();
 
-    delete ATINetFtTask;
-
-    delete socket;
-    delete sampleGUI;
+    delete netFTLogger;
+    delete netFTGui;
+    delete netFTTask;
+    delete netFTGui;
 
     osaSleep(0.1);
 

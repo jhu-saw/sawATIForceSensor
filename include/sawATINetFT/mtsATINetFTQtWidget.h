@@ -34,7 +34,7 @@ http://www.cisst.org/cisst/license.txt.
 class mtsATINetFTQtWidget: public QWidget, public mtsComponent
 {
     Q_OBJECT;
-    CMN_DECLARE_SERVICES(CMN_DYNAMIC_CREATION_ONEARG, CMN_LOG_ALLOW_DEFAULT);
+    CMN_DECLARE_SERVICES(CMN_DYNAMIC_CREATION_ONEARG, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
 
 public:
     mtsATINetFTQtWidget(const std::string & componentName, double periodInSeconds = 50.0 * cmn_ms);

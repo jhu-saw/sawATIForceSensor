@@ -29,7 +29,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstOSAbstraction.h>
 
 class loggerTask: public mtsTaskPeriodic {
-    CMN_DECLARE_SERVICES(CMN_NO_DYNAMIC_CREATION, CMN_LOG_LOD_RUN_ERROR);
+    CMN_DECLARE_SERVICES(CMN_NO_DYNAMIC_CREATION, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
 
 public:
     loggerTask(const std::string & taskName,  double period);
