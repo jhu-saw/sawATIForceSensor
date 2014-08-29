@@ -1,5 +1,4 @@
 #
-#
 # (C) Copyright 2014 Johns Hopkins University (JHU), All Rights
 # Reserved.
 #
@@ -11,6 +10,6 @@
 #
 # --- end cisst license ---
 
-project (sawATINetFT)
+project (sawATIForceSensor)
 add_subdirectory (code)
 add_subdirectory (examples)

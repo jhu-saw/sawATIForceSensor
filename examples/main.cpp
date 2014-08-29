@@ -19,13 +19,11 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <cisstCommon/cmnCommandLineOptions.h>
 #include <cisstMultiTask/mtsQtApplication.h>
+#include <cisstMultiTask/mtsCollectorState.h>
+
 #include <sawTextToSpeech/mtsTextToSpeech.h>
-
-#include <sawATINetFT/mtsATINetFTSensor.h>
-#include <sawATINetFT/mtsATINetFTLogger.h>
-
-// Qt include
-#include <sawATINetFT/mtsATINetFTQtWidget.h>
+#include <sawATIForceSensor/mtsATINetFTSensor.h>
+#include <sawATIForceSensor/mtsATINetFTQtWidget.h>
 
 int main(int argc, char ** argv)
 {
@@ -79,18 +77,14 @@ int main(int argc, char ** argv)
     mtsATINetFTQtWidget * forceSensorGUI = new mtsATINetFTQtWidget("ATINetFTGUI");
     componentManager->AddComponent(forceSensorGUI);
 
-    mtsATINetFTLogger *netFTLogger = new mtsATINetFTLogger("ATINetFTLogger", 0.02);
-    netFTLogger->SetSavePath("/home/kraven/dev/cisst_nri/build/cisst/bin/");
-    componentManager->AddComponent(netFTLogger);
-
-    mtsTextToSpeech* textToSpeech = new mtsTextToSpeech;
+    mtsTextToSpeech * textToSpeech = new mtsTextToSpeech;
     textToSpeech->AddInterfaceRequiredForEventString("ErrorMsg", "RobotErrorMsg");
     textToSpeech->SetPreemptive(true);
     componentManager->AddComponent(textToSpeech);
 
     mtsCollectorState *stateCollector = new mtsCollectorState(forceSensor->GetName(),
-                                                         forceSensor->GetDefaultStateTableName(),
-                                                         mtsCollectorBase::COLLECTOR_FILE_FORMAT_CSV);
+                                                              forceSensor->GetDefaultStateTableName(),
+                                                              mtsCollectorBase::COLLECTOR_FILE_FORMAT_CSV);
 
     stateCollector->AddSignal("FTData");
     componentManager->AddComponent(stateCollector);
@@ -99,15 +93,8 @@ int main(int argc, char ** argv)
 
     componentManager->Connect(textToSpeech->GetName(), "ErrorMsg", "ForceSensor", "ProvidesATINetFTSensor");
 
-    componentManager->Connect("ATINetFTGUI"      , "RequiresATINetFTSensor",
-                         "ForceSensor"     , "ProvidesATINetFTSensor");
-
-    componentManager->Connect("ATINetFTGUI"      , "RequiresFTLogger",
-                         "ATINetFTLogger"   , "ProvidesFTLogger");
-
-    componentManager->Connect("ATINetFTLogger"   , "RequiresATINetFTSensor",
-                         "ForceSensor"     , "ProvidesATINetFTSensor");
-
+    componentManager->Connect("ATINetFTGUI", "RequiresATINetFTSensor",
+                              "ForceSensor", "ProvidesATINetFTSensor");
 
     // create and start all tasks
     stateCollector->StartCollection(0.0);
@@ -117,7 +104,7 @@ int main(int argc, char ** argv)
     componentManager->StartAll();
     componentManager->WaitForStateAll(mtsComponentState::ACTIVE);
 
-    osaSleep(5.0 * cmn_s);
+    std::cerr << CMN_LOG_DETAILS << " to be removed" << std::endl;
     stateCollector->StopCollection(0.0);
 
     // kill all tasks and perform cleanup
@@ -125,7 +112,6 @@ int main(int argc, char ** argv)
     componentManager->WaitForStateAll(mtsComponentState::FINISHED, 2.0 * cmn_s);
     componentManager->Cleanup();
 
-    delete netFTLogger;
     delete forceSensor;
 
     cmnLogger::Kill();

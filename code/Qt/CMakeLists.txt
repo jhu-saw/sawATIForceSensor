@@ -36,20 +36,20 @@ if (cisst_FOUND_AS_REQUIRED)
   include_directories (${CMAKE_CURRENT_BINARY_DIR})
   if (CISST_HAS_QT4)
     qt4_wrap_cpp (SAW_ATINETFT_QT_WRAP_CPP
-                  ${sawATINetFT_HEADER_DIR}/mtsATINetFTQtWidget.h)
+                  ${sawATIForceSensor_HEADER_DIR}/mtsATINetFTQtWidget.h)
   else (CISST_HAS_QT4)
     set (CMAKE_AUTOMOC ON)
   endif (CISST_HAS_QT4)
 
-  add_library (sawATINetFTQt
-               ${sawATINetFT_HEADER_DIR}/mtsATINetFTQtWidget.h
+  add_library (sawATIForceSensorQt
+               ${sawATIForceSensor_HEADER_DIR}/mtsATINetFTQtWidget.h
                mtsATINetFTQtWidget.cpp
                ${SAW_ATINETFT_QT_WRAP_CPP})
-  set_property (TARGET sawATINetFTQt PROPERTY FOLDER "sawATINetFT")
-  cisst_target_link_libraries (sawATINetFTQt ${REQUIRED_CISST_LIBRARIES})
+  set_property (TARGET sawATIForceSensorQt PROPERTY FOLDER "sawATIForceSensor")
+  cisst_target_link_libraries (sawATIForceSensorQt ${REQUIRED_CISST_LIBRARIES})
 
   # make sure the new library is known by the parent folder to add to the config file
-  set (sawATINetFTQt_LIBRARIES sawATINetFTQt PARENT_SCOPE)
+  set (sawATIForceSensorQt_LIBRARIES sawATIForceSensorQt PARENT_SCOPE)
 
 else (cisst_FOUND_AS_REQUIRED)
   message ("Information: code will not be compiled, it requires ${REQUIRED_CISST_LIBRARIES}")

@@ -2,7 +2,6 @@
 /* ex: set filetype=cpp softtabstop=4 shiftwidth=4 tabstop=4 cindent expandtab: */
 
 /*
-
   Author(s):  Anton Deguet
   Created on: 2013-08-24
 
@@ -27,8 +26,7 @@ http://www.cisst.org/cisst/license.txt.
 
 // cisst
 #include <cisstMultiTask/mtsInterfaceRequired.h>
-
-#include <sawATINetFT/mtsATINetFTQtWidget.h>
+#include <sawATIForceSensor/mtsATINetFTQtWidget.h>
 
 CMN_IMPLEMENT_SERVICES_DERIVED_ONEARG(mtsATINetFTQtWidget, mtsComponent, std::string);
 
@@ -45,14 +43,6 @@ mtsATINetFTQtWidget::mtsATINetFTQtWidget(const std::string & componentName, doub
 //        interfaceRequired->AddFunction("GetIsSaturated", NetFT.GetIsSaturated);
     }
 
-#if 0
-    interfaceRequired = AddInterfaceRequired("RequiresFTLogger", MTS_OPTIONAL);
-
-    if (interfaceRequired) {
-        interfaceRequired->AddFunction("SetLogEnabled", NetFT.SetLogEnabled);
-        interfaceRequired->AddFunction("GetLogEnabled", NetFT.GetLogEnabled);
-    }
-#endif
     setupUi();
     startTimer(TimerPeriodInMilliseconds);
 }
@@ -64,7 +54,7 @@ void mtsATINetFTQtWidget::Configure(const std::string &filename)
 
 void mtsATINetFTQtWidget::Startup(void)
 {
-    CMN_LOG_CLASS_INIT_VERBOSE << "mtsATINetFTQtWidget::Startup" << std::endl;
+    CMN_LOG_CLASS_INIT_VERBOSE << "Startup" << std::endl;
     if (!parent()) {
         show();
     }
@@ -73,7 +63,7 @@ void mtsATINetFTQtWidget::Startup(void)
 void mtsATINetFTQtWidget::Cleanup(void)
 {
     this->hide();
-    CMN_LOG_CLASS_INIT_VERBOSE << "mtsATINetFTQtWidget::Cleanup" << std::endl;
+    CMN_LOG_CLASS_INIT_VERBOSE << "Cleanup" << std::endl;
 }
 
 void mtsATINetFTQtWidget::closeEvent(QCloseEvent * event)
@@ -108,38 +98,12 @@ void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
 
     QFTSensorValues->SetValue(FTReadings);
     QFTSensorValues->setHorizontalHeaderLabels(heading);
-
-//    executionResult = NetFT.GetIsSaturated(IsSaturated);
-//    if (!executionResult) {
-//        CMN_LOG_CLASS_RUN_ERROR << "NetFT.GetIsSaturated failed, \""
-//                                << executionResult << "\"" << std::endl;
-//    }
-
-#if 0
-    executionResult = NetFT.GetLogEnabled(LogEnabled);
-    if (!executionResult) {
-        CMN_LOG_CLASS_RUN_ERROR << "NetFT.GetLogEnabled failed, \""
-                                << executionResult << "\"" << std::endl;
-    }
-#endif
 }
 
 void mtsATINetFTQtWidget::RebiasFTSensor(void)
 {
     NetFT.RebiasFTData();
 }
-
-#if 0
-void mtsATINetFTQtWidget::LogClicked(void)
-{
-    if (LogEnabled.Data)
-        LogEnabled.Data = false;
-    else
-        LogEnabled.Data = true;
-
-    NetFT.SetLogEnabled(LogEnabled);
-}
-#endif
 
 void mtsATINetFTQtWidget::setupUi()
 {
@@ -152,7 +116,7 @@ void mtsATINetFTQtWidget::setupUi()
     QLabel * instructionsLabel = new QLabel("This widget displays the force and torques values sensed by the ATI NetFT Sensor.\nUnits - Force(N), Torque(N-mm) \nValue in the brackets of each header displays the max F/T(-value,+value)");
     controlLayout->addWidget(instructionsLabel);
 
-    QSpacerItem *vSpacer = new QSpacerItem(40, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
+    QSpacerItem * vSpacer = new QSpacerItem(40, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
     controlLayout->addItem(vSpacer);
 
     QFTSensorValues = new vctQtWidgetDynamicVectorDoubleRead();
@@ -162,11 +126,7 @@ void mtsATINetFTQtWidget::setupUi()
 
     controlLayout->addWidget(QFTSensorValues);
 
-    QHBoxLayout *buttonLayout = new QHBoxLayout;
-
-    //    logButton = new QPushButton("Log Data");
-
-    //     buttonLayout->addWidget(logButton);
+    QHBoxLayout * buttonLayout = new QHBoxLayout;
 
     RebiasButton = new QPushButton("Rebias");
     buttonLayout->addWidget(RebiasButton);
@@ -187,5 +147,4 @@ void mtsATINetFTQtWidget::setupUi()
 
     // setup Qt Connection
     connect(RebiasButton, SIGNAL(clicked()), this, SLOT(RebiasFTSensor()));
-    //     connect(logButton   , SIGNAL(clicked()), this, SLOT(LogClicked())    );
 }

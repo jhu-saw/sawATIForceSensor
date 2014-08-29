@@ -21,7 +21,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstCommon/cmnConstants.h>
 #include <cisstMultiTask/mtsInterfaceProvided.h>
 
-#include <sawATINetFT/mtsATINetFTSensor.h>
+#include <sawATIForceSensor/mtsATINetFTSensor.h>
 #if (CISST_OS == CISST_LINUX)
 #include <netinet/in.h>
 #endif

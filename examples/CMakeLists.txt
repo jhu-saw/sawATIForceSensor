@@ -33,33 +33,33 @@ if (cisst_FOUND_AS_REQUIRED)
   include (${CISST_USE_FILE})
 
   cisst_find_saw_component (sawTextToSpeech REQUIRED)
-  cisst_find_saw_component (sawATINetFT REQUIRED)
+  cisst_find_saw_component (sawATIForceSensor REQUIRED)
 
-  if (sawATINetFT_FOUND)
+  if (sawATIForceSensor_FOUND)
 
-    # sawATINetFT configuration
-    include_directories (${sawATINetFT_INCLUDE_DIR}
+    # sawATIForceSensor configuration
+    include_directories (${sawATIForceSensor_INCLUDE_DIR}
                          ${sawTextToSpeech_INCLUDE_DIR})
 
-    link_directories (${sawATINetFT_LIBRARY_DIR}
+    link_directories (${sawATIForceSensor_LIBRARY_DIR}
                       ${sawTextToSpeech_LIBRARY_DIR})
 
     if (CISST_HAS_QT)
-      add_executable(sawATINetFTExample
+      add_executable(sawATIForceSensorExample
                      main.cpp
                      )
 
       # link against non cisst libraries and cisst components
-      target_link_libraries (sawATINetFTExample
-                             ${sawATINetFT_LIBRARIES}
+      target_link_libraries (sawATIForceSensorExample
+                             ${sawATIForceSensor_LIBRARIES}
                              ${sawTextToSpeech_LIBRARIES})
 
       # link against cisst libraries (and dependencies)
-      cisst_target_link_libraries (sawATINetFTExample ${REQUIRED_CISST_LIBRARIES})
-      set_property (TARGET sawATINetFTExample PROPERTY FOLDER "sawATINetFT")
+      cisst_target_link_libraries (sawATIForceSensorExample ${REQUIRED_CISST_LIBRARIES})
+      set_property (TARGET sawATIForceSensorExample PROPERTY FOLDER "sawATIForceSensor")
 
     endif (CISST_HAS_QT)
 
-  endif (sawATINetFT_FOUND)
+  endif (sawATIForceSensor_FOUND)
 
 endif (cisst_FOUND_AS_REQUIRED)
