@@ -2,13 +2,10 @@
 /* ex: set filetype=cpp softtabstop=4 shiftwidth=4 tabstop=4 cindent expandtab: */
 
 /*
-$Id: $
+  Author(s):  Preetham Chalasani
+  Created on: 2013
 
-Author(s):  Preetham Chalasani
-Created on: 2013
-
-(C) Copyright 2006-2013 Johns Hopkins University (JHU), All Rights
-Reserved.
+  (C) Copyright 2013-2014 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -26,7 +23,6 @@ http://www.cisst.org/cisst/license.txt.
 #include <sawTextToSpeech/mtsTextToSpeech.h>
 
 #include <sawATINetFT/mtsATINetFTSensor.h>
-#include <sawATINetFT/loggerTask.h>
 
 // Qt include
 #include <sawATINetFT/mtsATINetFTQtWidget.h>
@@ -34,69 +30,55 @@ http://www.cisst.org/cisst/license.txt.
 
 const std::string GlobalComponentManagerAddress = "127.0.0.1";
 
-int main (int argc, char ** argv)
+int main(int argc, char ** argv)
 {
-
     cmnLogger::SetMask(CMN_LOG_ALLOW_ALL);
-    cmnLogger::AddChannel(std::cout, CMN_LOG_ALLOW_ALL);    
-    cmnLogger::SetMaskClassMatching("osaTimeServer", CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
-    cmnLogger::SetMaskClass("cmnThrow", CMN_LOG_ALLOW_ALL);    
+    cmnLogger::AddChannel(std::cout, CMN_LOG_ALLOW_ALL);
 
-    mtsTaskManager * taskManager;
+    mtsComponentManager * componentManager;
     try {
-        taskManager = mtsManagerLocal::GetInstance(GlobalComponentManagerAddress,"ATINetFTSensorProcess");
+        componentManager = mtsManagerLocal::GetInstance(GlobalComponentManagerAddress, "ATINetFTSensorProcess");
     } catch (...) {
         CMN_LOG_INIT_WARNING << "Failed to initialize Global component manager" << std::endl;
         CMN_LOG_INIT_WARNING << "Running in local mode" << std::endl;
-        taskManager = mtsTaskManager::GetInstance();
+        componentManager = mtsComponentManager::GetInstance();
     }
 
     // create a Qt application and tab to hold all widgets
     mtsQtApplication *qtAppTask = new mtsQtApplication("QtApplication", argc, argv);
     qtAppTask->Configure();
-    taskManager->AddComponent(qtAppTask);
+    componentManager->AddComponent(qtAppTask);
 
-    mtsATINetFTSensor *netFTTask = new mtsATINetFTSensor("ATINetFTTask");       // Continuous
-    mtsATINetFTQtWidget *netFTGui = new mtsATINetFTQtWidget("ATINetFTGUI");
-    loggerTask *netFTLogger = new loggerTask("ATINetFTLogger", 0.02);
-    mtsTextToSpeech* textToSpeech = new mtsTextToSpeech;
+    mtsATINetFTSensor * forceSensor = new mtsATINetFTSensor("ATINetFTTask");       // Continuous
+    mtsATINetFTQtWidget * netFTGui = new mtsATINetFTQtWidget("ATINetFTGUI");
+    mtsTextToSpeech * textToSpeech = new mtsTextToSpeech;
 
     textToSpeech->AddInterfaceRequiredForEventString("ErrorMsg", "RobotErrorMsg");
-    textToSpeech->SetPreemptive(true);
+    //    textToSpeech->SetPreemptive(true);
 
-    netFTTask->SetIPAddress("192.168.1.1");      // IP address of the FT sensor
-    netFTLogger->SetSavePath("/home/kraven/dev/cisst_nri/build/cisst/bin/");
+    forceSensor->SetIPAddress("192.168.1.1");      // IP address of the FT sensor
+    //     netFTLogger->SetSavePath("/home/kraven/dev/cisst_nri/build/cisst/bin/");
 
-    taskManager->AddComponent(netFTGui);
-    taskManager->AddComponent(netFTTask);
-    taskManager->AddComponent(netFTLogger);
-    taskManager->AddComponent(textToSpeech);
-
-
-    taskManager->Connect(textToSpeech->GetName(), "ErrorMsg", "ATINetFTTask", "ProvidesATINetFTSensor");
-
-    taskManager->Connect("ATINetFTGUI"      , "RequiresATINetFTSensor",
-                         "ATINetFTTask"     , "ProvidesATINetFTSensor");
-
-    taskManager->Connect("ATINetFTGUI"      , "RequiresFTLogger",
-                         "ATINetFTLogger"   , "ProvidesFTLogger");
-
-    taskManager->Connect("ATINetFTLogger"   , "RequiresATINetFTSensor",
-                         "ATINetFTTask"     , "ProvidesATINetFTSensor");
-
-    taskManager->CreateAllAndWait(2.0 * cmn_s);
-    taskManager->StartAllAndWait(2.0 * cmn_s);
+    componentManager->AddComponent(netFTGui);
+    componentManager->AddComponent(forceSensor);
+    // componentManager->AddComponent(netFTLogger);
+    componentManager->AddComponent(textToSpeech);
 
 
-    taskManager->KillAllAndWait(2.0 * cmn_s);
-    taskManager->Cleanup();
+    componentManager->Connect(textToSpeech->GetName(), "ErrorMsg", "ATINetFTTask", "ProvidesATINetFTSensor");
 
-    delete netFTLogger;
-    delete netFTGui;
-    delete netFTTask;
-    delete netFTGui;
+    componentManager->Connect("ATINetFTGUI"      , "RequiresATINetFTSensor",
+                              "ATINetFTTask"     , "ProvidesATINetFTSensor");
 
-    osaSleep(0.1);
+    componentManager->CreateAllAndWait(2.0 * cmn_s);
+    componentManager->StartAllAndWait(2.0 * cmn_s);
+
+    componentManager->KillAllAndWait(2.0 * cmn_s);
+    componentManager->Cleanup();
+
+    delete forceSensor;
+
+    cmnLogger::Kill();
 
     return 0;
 }

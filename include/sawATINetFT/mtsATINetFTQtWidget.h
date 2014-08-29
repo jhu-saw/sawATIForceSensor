@@ -50,7 +50,7 @@ protected:
 private slots:
     void timerEvent(QTimerEvent * event);
     void RebiasFTSensor(void);
-    void LogClicked(void);
+    // void LogClicked(void);
 
 private:
     //! setup TeleOperation controller GUI
@@ -68,8 +68,8 @@ protected:
 
     struct NetFTStruct {
         mtsFunctionVoid     RebiasFTData;
-        mtsFunctionWrite    SetLogEnabled;
-        mtsFunctionRead     GetLogEnabled;
+        //         mtsFunctionWrite    SetLogEnabled;
+        // mtsFunctionRead     GetLogEnabled;
         mtsFunctionRead     GetFTData;
         mtsFunctionRead     GetIsSaturated;
     } NetFT;
@@ -78,10 +78,10 @@ protected:
 private:
 
     mtsDoubleVec    FTReadings;
-    mtsBool         LogEnabled;
+    //    mtsBool         LogEnabled;
     mtsBool         IsSaturated;
     vctQtWidgetDynamicVectorDoubleRead *QFTSensorValues;
-    QPushButton *logButton;
+    //     QPushButton *logButton;
     QPushButton *rebiasButton;
 
 

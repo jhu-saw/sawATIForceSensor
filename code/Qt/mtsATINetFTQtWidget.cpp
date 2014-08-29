@@ -45,13 +45,14 @@ mtsATINetFTQtWidget::mtsATINetFTQtWidget(const std::string & componentName, doub
 //        interfaceRequired->AddFunction("GetIsSaturated", NetFT.GetIsSaturated);
     }
 
+#if 0
     interfaceRequired = AddInterfaceRequired("RequiresFTLogger", MTS_OPTIONAL);
 
-    if(interfaceRequired) {
+    if (interfaceRequired) {
         interfaceRequired->AddFunction("SetLogEnabled", NetFT.SetLogEnabled);
         interfaceRequired->AddFunction("GetLogEnabled", NetFT.GetLogEnabled);
     }
-
+#endif
     setupUi();
     startTimer(TimerPeriodInMilliseconds);
 }
@@ -114,12 +115,13 @@ void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
 //                                << executionResult << "\"" << std::endl;
 //    }
 
+#if 0
     executionResult = NetFT.GetLogEnabled(LogEnabled);
     if (!executionResult) {
         CMN_LOG_CLASS_RUN_ERROR << "NetFT.GetLogEnabled failed, \""
                                 << executionResult << "\"" << std::endl;
     }
-
+#endif
 }
 
 void mtsATINetFTQtWidget::RebiasFTSensor(void)
@@ -127,6 +129,7 @@ void mtsATINetFTQtWidget::RebiasFTSensor(void)
     NetFT.RebiasFTData();
 }
 
+#if 0
 void mtsATINetFTQtWidget::LogClicked(void)
 {
     if (LogEnabled.Data)
@@ -136,6 +139,7 @@ void mtsATINetFTQtWidget::LogClicked(void)
 
     NetFT.SetLogEnabled(LogEnabled);
 }
+#endif
 
 void mtsATINetFTQtWidget::setupUi()
 {
@@ -160,9 +164,9 @@ void mtsATINetFTQtWidget::setupUi()
 
     QHBoxLayout *buttonLayout = new QHBoxLayout;
 
-    logButton = new QPushButton("Log Data");
+    //    logButton = new QPushButton("Log Data");
 
-    buttonLayout->addWidget(logButton);
+    //     buttonLayout->addWidget(logButton);
 
     rebiasButton = new QPushButton("Rebias");
     buttonLayout->addWidget(rebiasButton);
@@ -183,5 +187,5 @@ void mtsATINetFTQtWidget::setupUi()
 
     // setup Qt Connection
     connect(rebiasButton, SIGNAL(clicked()), this, SLOT(RebiasFTSensor()));
-    connect(logButton   , SIGNAL(clicked()), this, SLOT(LogClicked())    );
+    //     connect(logButton   , SIGNAL(clicked()), this, SLOT(LogClicked())    );
 }
