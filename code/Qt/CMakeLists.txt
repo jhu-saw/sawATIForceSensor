@@ -25,12 +25,12 @@ set (REQUIRED_CISST_LIBRARIES
      cisstQt)
 
 # cisst
-FIND_PACKAGE(cisst REQUIRED ${REQUIRED_CISST_LIBRARIES})
+find_package (cisst REQUIRED ${REQUIRED_CISST_LIBRARIES})
 
 if (cisst_FOUND_AS_REQUIRED)
 
   # cisst
-  INCLUDE(${CISST_USE_FILE})  
+  include (${CISST_USE_FILE})
 
   # for Qt generated header files
   include_directories (${CMAKE_CURRENT_BINARY_DIR})
@@ -47,9 +47,6 @@ if (cisst_FOUND_AS_REQUIRED)
                ${SAW_ATINETFT_QT_WRAP_CPP})
   set_property (TARGET sawATINetFTQt PROPERTY FOLDER "sawATINetFT")
   cisst_target_link_libraries (sawATINetFTQt ${REQUIRED_CISST_LIBRARIES})
-  if (CISST_HAS_QT5)
-    qt5_use_modules (sawATINetFTQt Core Widgets)
-  endif (CISST_HAS_QT5)
 
   # make sure the new library is known by the parent folder to add to the config file
   set (sawATINetFTQt_LIBRARIES sawATINetFTQt PARENT_SCOPE)
