@@ -38,9 +38,9 @@ mtsATINetFTQtWidget::mtsATINetFTQtWidget(const std::string & componentName, doub
     mtsInterfaceRequired * interfaceRequired;
     interfaceRequired = AddInterfaceRequired("RequiresATINetFTSensor");
     if(interfaceRequired) {
-        interfaceRequired->AddFunction("GetFTData", NetFT.GetFTData);
-        interfaceRequired->AddFunction("RebiasFTData", NetFT.RebiasFTData);
-//        interfaceRequired->AddFunction("GetIsSaturated", NetFT.GetIsSaturated);
+        interfaceRequired->AddFunction("GetFTData", ForceSensor.GetFTData);
+        interfaceRequired->AddFunction("RebiasFTData", ForceSensor.RebiasFTData);
+        interfaceRequired->AddFunction("GetPeriodStatistics", ForceSensor.GetPeriodStatistics);
     }
 
     setupUi();
@@ -87,9 +87,9 @@ void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
     }
 
     mtsExecutionResult executionResult;
-    executionResult = NetFT.GetFTData(FTReadings);
+    executionResult = ForceSensor.GetFTData(FTReadings);
     if (!executionResult) {
-        CMN_LOG_CLASS_RUN_ERROR << "NetFT.GetFTData failed, \""
+        CMN_LOG_CLASS_RUN_ERROR << "ForceSensor.GetFTData failed, \""
                                 << executionResult << "\"" << std::endl;
     }
 
@@ -98,11 +98,14 @@ void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
 
     QFTSensorValues->SetValue(FTReadings);
     QFTSensorValues->setHorizontalHeaderLabels(heading);
+
+    ForceSensor.GetPeriodStatistics(IntervalStatistics);
+    QMIntervalStatistics->SetValue(IntervalStatistics);
 }
 
 void mtsATINetFTQtWidget::RebiasFTSensor(void)
 {
-    NetFT.RebiasFTData();
+    ForceSensor.RebiasFTData();
 }
 
 void mtsATINetFTQtWidget::setupUi()
@@ -126,6 +129,9 @@ void mtsATINetFTQtWidget::setupUi()
 
     controlLayout->addWidget(QFTSensorValues);
 
+    QMIntervalStatistics = new mtsQtWidgetIntervalStatistics();
+    controlLayout->addWidget(QMIntervalStatistics);
+
     QHBoxLayout * buttonLayout = new QHBoxLayout;
 
     RebiasButton = new QPushButton("Rebias");
@@ -142,7 +148,7 @@ void mtsATINetFTQtWidget::setupUi()
 
     setLayout(mainLayout);
 
-    setWindowTitle("ATI NetFT Sensor(N, N-mm)");
+    setWindowTitle("ATI Force Sensor(N, N-mm)");
     resize(sizeHint());
 
     // setup Qt Connection

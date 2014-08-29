@@ -28,29 +28,28 @@ http://www.cisst.org/cisst/license.txt.
 
 CMN_IMPLEMENT_SERVICES(mtsATINetFTSensor)
 
-mtsATINetFTSensor::mtsATINetFTSensor(const std::string &taskName):
-    mtsTaskContinuous(taskName, 5000),
+mtsATINetFTSensor::mtsATINetFTSensor(const std::string & componentName):
+    mtsTaskContinuous(componentName, 5000),
     Socket(osaSocket::UDP),
+    FirstRun(true),
     Port(49152)
 {
     FTData.SetSize(6);
     RawFTData.SetSize(6);
     InitialFTData.SetSize(6);
-    programStart = true;
-
-    mtsInterfaceProvided * socketInterface = AddInterfaceProvided("ProvidesATINetFTSensor");
 
     StateTable.AddData(FTData, "FTData");
-    StateTable.AddData(IsConnected, "IsConneted");
+    StateTable.AddData(IsConnected, "IsConnected");
 
-    socketInterface->AddCommandReadState(StateTable, FTData, "GetFTData");
-    socketInterface->AddCommandReadState(StateTable, IsConnected, "GetSocketStatus");
-
-    socketInterface->AddCommandVoid(&mtsATINetFTSensor::RebiasFTData, this, "RebiasFTData");
-
-    socketInterface->AddEventWrite(EventTriggers.RobotErrorMsg, "RobotErrorMsg", std::string(""));
-
-    StateTable.Advance();
+    mtsInterfaceProvided * interfaceProvided = AddInterfaceProvided("ProvidesATINetFTSensor");
+    if (interfaceProvided) {
+        interfaceProvided->AddCommandReadState(StateTable, FTData, "GetFTData");
+        interfaceProvided->AddCommandReadState(StateTable, IsConnected, "GetSocketStatus");
+        interfaceProvided->AddCommandReadState(StateTable, StateTable.PeriodStats,
+                                               "GetPeriodStatistics");
+        interfaceProvided->AddCommandVoid(&mtsATINetFTSensor::RebiasFTData, this, "RebiasFTData");
+        interfaceProvided->AddEventWrite(EventTriggers.RobotErrorMsg, "RobotErrorMsg", std::string(""));
+    }
 }
 
 void mtsATINetFTSensor::Startup(void)
@@ -95,7 +94,7 @@ void mtsATINetFTSensor::GetReadings(void)
     int result;
     // try to send, but timeout after 10 ms
     result = Socket.Send((const char *)Request, 8, 10.0 *cmn_ms);
-    if (result == -1){
+    if (result == -1) {
         CMN_LOG_CLASS_RUN_WARNING << "GetReadings: UDP send failed" << std::endl;
         return;
     }
@@ -109,7 +108,7 @@ void mtsATINetFTSensor::GetReadings(void)
         int temp;
         for (int i = 0; i < 6; i++ ) {
             temp = ntohl(*(int32*)&Response[12 + i * 4]);
-            if (programStart) {
+            if (FirstRun) {
                 InitialFTData[i] = (double)((double)temp/1000000);
                 CMN_LOG_CLASS_INIT_DEBUG << "Initial data: " << InitialFTData[i] << " ";
             }
@@ -123,7 +122,7 @@ void mtsATINetFTSensor::GetReadings(void)
         FTData.SetValid(false);
         FTData.Zeros();
     }
-    programStart = false;
+    FirstRun = false;
 }
 
 void mtsATINetFTSensor::RebiasFTData(void)
@@ -138,8 +137,8 @@ bool mtsATINetFTSensor::IsSaturated(void)
     vct6 MaxLoads = NetFTConfig.NetFT.GenInfo.Ranges;
     Saturated = false;
     for (size_t i = 0; i < MaxLoads.size(); ++i) {
-        if (FTData[i] > 0 && FTData[i] > MaxLoads[i] ||
-            (FTData[i] < 0 && FTData[i] < -MaxLoads[i]) )  {
+        if (((FTData[i] > 0) && (FTData[i] > MaxLoads[i])) ||
+            ((FTData[i] < 0) && (FTData[i] < -MaxLoads[i])) )  {
             EventTriggers.RobotErrorMsg(std::string("Sensor Saturated"));
             Saturated = true;
         }
