@@ -17,11 +17,14 @@ http://www.cisst.org/cisst/license.txt.
 
 */
 
+#include <cisstCommon/cmnPortability.h>
 #include <cisstCommon/cmnConstants.h>
 #include <cisstMultiTask/mtsInterfaceProvided.h>
 
 #include <sawATINetFT/mtsATINetFTSensor.h>
-
+#if (CISST_OS == CISST_LINUX)
+#include <netinet/in.h>
+#endif
 
 CMN_IMPLEMENT_SERVICES(mtsATINetFTSensor)
 
