@@ -26,7 +26,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <sawTextToSpeech/mtsTextToSpeech.h>
 
 #include <sawATINetFT/mtsATINetFTSensor.h>
-#include <sawATINetFT/loggerTask.h>
+#include <sawATINetFT/mtsATINetFTLogger.h>
 
 // Qt include
 #include <sawATINetFT/mtsATINetFTQtWidget.h>
@@ -38,9 +38,10 @@ int main (int argc, char ** argv)
 {
 
     cmnLogger::SetMask(CMN_LOG_ALLOW_ALL);
-    cmnLogger::AddChannel(std::cout, CMN_LOG_ALLOW_ALL);    
+    cmnLogger::AddChannel(std::cout, CMN_LOG_ALLOW_ALL);
     cmnLogger::SetMaskClassMatching("osaTimeServer", CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
-    cmnLogger::SetMaskClass("cmnThrow", CMN_LOG_ALLOW_ALL);    
+    cmnLogger::SetMaskClass("cmnThrow", CMN_LOG_ALLOW_ALL);
+    cmnLogger::SetMaskClass("mtsCollectorState", CMN_LOG_ALLOW_ALL);
 
     mtsTaskManager * taskManager;
     try {
@@ -57,21 +58,30 @@ int main (int argc, char ** argv)
     taskManager->AddComponent(qtAppTask);
 
     mtsATINetFTSensor *netFTTask = new mtsATINetFTSensor("ATINetFTTask");       // Continuous
-    mtsATINetFTQtWidget *netFTGui = new mtsATINetFTQtWidget("ATINetFTGUI");
-    loggerTask *netFTLogger = new loggerTask("ATINetFTLogger", 0.02);
-    mtsTextToSpeech* textToSpeech = new mtsTextToSpeech;
+    netFTTask->SetIPAddress("192.168.1.1");      // IP address of the FT sensor
+    netFTTask->Configure("/home/kraven/dev/cisst_nri/source/sawATINetFT/examples/FT15360Net.xml");
+    taskManager->AddComponent(netFTTask);
 
+    mtsATINetFTQtWidget *netFTGui = new mtsATINetFTQtWidget("ATINetFTGUI");
+    taskManager->AddComponent(netFTGui);
+
+    mtsATINetFTLogger *netFTLogger = new mtsATINetFTLogger("ATINetFTLogger", 0.02);
+    netFTLogger->SetSavePath("/home/kraven/dev/cisst_nri/build/cisst/bin/");
+    taskManager->AddComponent(netFTLogger);
+
+    mtsTextToSpeech* textToSpeech = new mtsTextToSpeech;
     textToSpeech->AddInterfaceRequiredForEventString("ErrorMsg", "RobotErrorMsg");
     textToSpeech->SetPreemptive(true);
-
-    netFTTask->SetIPAddress("192.168.1.1");      // IP address of the FT sensor
-    netFTLogger->SetSavePath("/home/kraven/dev/cisst_nri/build/cisst/bin/");
-
-    taskManager->AddComponent(netFTGui);
-    taskManager->AddComponent(netFTTask);
-    taskManager->AddComponent(netFTLogger);
     taskManager->AddComponent(textToSpeech);
 
+    mtsCollectorState *stateCollector = new mtsCollectorState(netFTTask->GetName(),
+                                                         netFTTask->GetDefaultStateTableName(),
+                                                         mtsCollectorBase::COLLECTOR_FILE_FORMAT_CSV);
+
+    stateCollector->AddSignal("FTData");
+    taskManager->AddComponent(stateCollector);
+    stateCollector->UseSeparateLogFileDefault();
+    stateCollector->Connect();
 
     taskManager->Connect(textToSpeech->GetName(), "ErrorMsg", "ATINetFTTask", "ProvidesATINetFTSensor");
 
@@ -84,19 +94,27 @@ int main (int argc, char ** argv)
     taskManager->Connect("ATINetFTLogger"   , "RequiresATINetFTSensor",
                          "ATINetFTTask"     , "ProvidesATINetFTSensor");
 
-    taskManager->CreateAllAndWait(2.0 * cmn_s);
-    taskManager->StartAllAndWait(2.0 * cmn_s);
 
+    // create and start all tasks
+    stateCollector->StartCollection(0.0);
 
-    taskManager->KillAllAndWait(2.0 * cmn_s);
+    taskManager->CreateAll();
+    taskManager->WaitForStateAll(mtsComponentState::READY);
+    taskManager->StartAll();
+    taskManager->WaitForStateAll(mtsComponentState::ACTIVE);
+
+    osaSleep(5*cmn_s);
+    stateCollector->StopCollection(0.0);
+
+    // kill all tasks and perform cleanup
+    taskManager->KillAll();
+    taskManager->WaitForStateAll(mtsComponentState::FINISHED, 2.0 * cmn_s);
     taskManager->Cleanup();
 
     delete netFTLogger;
     delete netFTGui;
     delete netFTTask;
     delete netFTGui;
-
-    osaSleep(0.1);
 
     return 0;
 }
