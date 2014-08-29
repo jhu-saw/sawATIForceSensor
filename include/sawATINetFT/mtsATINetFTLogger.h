@@ -20,20 +20,20 @@ http://www.cisst.org/cisst/license.txt.
 
 */
 
-#ifndef _loggerTask_h
-#define _loggerTask_h
+#ifndef _mtsATINetFTLogger_h
+#define _mtsATINetFTLogger_h
 
 #include <string>
 #include <iostream>
 #include <cisstMultiTask.h>
 #include <cisstOSAbstraction.h>
 
-class loggerTask: public mtsTaskPeriodic {
+class mtsATINetFTLogger: public mtsTaskPeriodic {
     CMN_DECLARE_SERVICES(CMN_NO_DYNAMIC_CREATION, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
 
 public:
-    loggerTask(const std::string & taskName,  double period);
-    ~loggerTask() ;
+    mtsATINetFTLogger(const std::string & taskName,  double period);
+    ~mtsATINetFTLogger() ;
 
     void Startup(void);
     void Run(void);
@@ -67,6 +67,6 @@ private:
 
 };
 
-CMN_DECLARE_SERVICES_INSTANTIATION(loggerTask);
+CMN_DECLARE_SERVICES_INSTANTIATION(mtsATINetFTLogger);
 
-#endif // _loggerTask_h
+#endif // _mtsATINetFTLogger_h

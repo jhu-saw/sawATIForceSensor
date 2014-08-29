@@ -24,11 +24,11 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstOSAbstraction/osaGetTime.h>
 #include <iomanip>
 #include <time.h>
-#include <sawATINetFT/loggerTask.h>
+#include <sawATINetFT/mtsATINetFTLogger.h>
 
-CMN_IMPLEMENT_SERVICES(loggerTask);
+CMN_IMPLEMENT_SERVICES(mtsATINetFTLogger);
 
-loggerTask::loggerTask(const std::string & taskName,double period):
+mtsATINetFTLogger::mtsATINetFTLogger(const std::string & taskName,double period):
     mtsTaskPeriodic(taskName, period, false, 1000)
 {
     Delim= ',';
@@ -44,9 +44,9 @@ loggerTask::loggerTask(const std::string & taskName,double period):
     if(logInterface)
     {        
         logInterface->AddCommandReadState(StateTable,LogEnabled , "GetLogEnabled");
-        logInterface->AddCommandWrite(&loggerTask::SetLogEnabled, this, "SetLogEnabled", mtsBool());
-        logInterface->AddCommandWrite(&loggerTask::SetFileName, this, "SetFileName", mtsStdString());
-        logInterface->AddCommandWrite(&loggerTask::WriteData, this, "WriteData", mtsStdString());
+        logInterface->AddCommandWrite(&mtsATINetFTLogger::SetLogEnabled, this, "SetLogEnabled", mtsBool());
+        logInterface->AddCommandWrite(&mtsATINetFTLogger::SetFileName, this, "SetFileName", mtsStdString());
+        logInterface->AddCommandWrite(&mtsATINetFTLogger::WriteData, this, "WriteData", mtsStdString());
     }
 
     mtsInterfaceRequired * ftInterface = AddInterfaceRequired("RequiresATINetFTSensor");
@@ -56,19 +56,19 @@ loggerTask::loggerTask(const std::string & taskName,double period):
     }
 }
 
-loggerTask::~loggerTask()
+mtsATINetFTLogger::~mtsATINetFTLogger()
 {
     CloseFiles();
 }
 
-void loggerTask::SetLogEnabled(const mtsBool &enable)
+void mtsATINetFTLogger::SetLogEnabled(const mtsBool &enable)
 {
     LogEnabled = enable;
     if(!LogEnabled.Data)
         CloseFiles();
 }
 
-void loggerTask::WriteData(const mtsStdString &note)
+void mtsATINetFTLogger::WriteData(const mtsStdString &note)
 {
     osaAbsoluteTime abstime;
 
@@ -78,12 +78,12 @@ void loggerTask::WriteData(const mtsStdString &note)
     LogFile << std::setprecision(6) << note.Timestamp() << ";" << note.Data << std::endl;
 }
 
-void loggerTask::Startup(void)
+void mtsATINetFTLogger::Startup(void)
 {
 
 }
 
-void loggerTask::Run(void)
+void mtsATINetFTLogger::Run(void)
 {
     ProcessQueuedCommands();
     ProcessQueuedEvents();
@@ -108,7 +108,7 @@ void loggerTask::Run(void)
 
 }
 
-bool loggerTask::OpenFiles(const std::string &fileNameBase)
+bool mtsATINetFTLogger::OpenFiles(const std::string &fileNameBase)
 {
     if(LogFile.is_open())
         CloseFiles();
@@ -132,25 +132,25 @@ bool loggerTask::OpenFiles(const std::string &fileNameBase)
     return true;
 }
 
-void loggerTask::SetFileName(const mtsStdString &fileNameBase)
+void mtsATINetFTLogger::SetFileName(const mtsStdString &fileNameBase)
 {
     FileNameBase = fileNameBase.Data;
     LogEnabled = false;
     CloseFiles();
 }
 
-void loggerTask::CloseFiles(void)
+void mtsATINetFTLogger::CloseFiles(void)
 {
     LogFile.close();
     CMN_LOG_CLASS_INIT_VERBOSE << "Log file Closed (If Opened)" << std::endl;
 }
 
-void loggerTask::Configure(const std::string &filename)
+void mtsATINetFTLogger::Configure(const std::string &filename)
 {
     CMN_LOG_CLASS_INIT_VERBOSE<< "Configuring Logger" << filename << std::endl;
 }
 
-void loggerTask::SetSavePath(const std::string &path)
+void mtsATINetFTLogger::SetSavePath(const std::string &path)
 {
     CMN_LOG_CLASS_INIT_VERBOSE<< "Setting Logger Path to (" << path << ")" << std::endl;
     SavePath = path;
