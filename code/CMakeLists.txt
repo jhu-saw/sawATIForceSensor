@@ -34,23 +34,17 @@ if (cisst_FOUND)
 	include_directories (${sawATINetFT_INCLUDE_DIR})
 	set (sawATINetFT_HEADER_DIR "${sawATINetFT_INCLUDE_DIR}/sawATINetFT")
 
-	set (HEADER_FILES
-                #${sawATINetFT_HEADER_DIR}/devNetFTSensorATITask.h
-                #${sawATINetFT_HEADER_DIR}/devNetFTSensorATI.h
-		${sawATINetFT_HEADER_DIR}/loggerTask.h
+	set (HEADER_FILES                
+		${sawATINetFT_HEADER_DIR}/mtsATINetFTLogger.h
                 ${sawATINetFT_HEADER_DIR}/mtsATINetFTSensor.h
-                #${sawATINetFT_HEADER_DIR}/ftconfig.h
-                #${sawATINetFT_HEADER_DIR}/ftrt.h
+                ${sawATINetFT_HEADER_DIR}/mtsATINetFTConfig.h
                 ${sawATINetFT_HEADER_DIR}/mtsATINetFTQtWidget
 		)
 
-	set (SOURCE_FILES
-                #devNetFTSensorATITask.cpp
-                #devNetFTSensorATI.cpp
-		loggerTask.cpp
+	set (SOURCE_FILES                
+		mtsATINetFTLogger.cpp
                 mtsATINetFTSensor.cpp
-                #ftconfig.c
-                #ftrt.c
+                mtsATINetFTConfig.cpp
 		)
 
 	add_library (sawATINetFT ${HEADER_FILES} ${SOURCE_FILES})

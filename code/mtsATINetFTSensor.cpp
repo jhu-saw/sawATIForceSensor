@@ -22,6 +22,7 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <cisstCommon/cmnConstants.h>
 
+#include <cisstOSAbstraction/osaStopwatch.h>
 #include <sawATINetFT/mtsATINetFTSensor.h>
 
 
@@ -49,10 +50,10 @@ mtsATINetFTSensor::mtsATINetFTSensor(const std::string &taskName):
 
     socketInterface->AddEventWrite(EventTriggers.RobotErrorMsg, "RobotErrorMsg", std::string(""));
 
-    StateTable.Advance();
+    StateTable.Advance();        
 }
 
-void mtsATINetFTSensor::Startup()
+void mtsATINetFTSensor::Startup(void)
 {    
     *(uint16*)&Request[0] = htons(0x1234); /* standard header. */
     *(uint16*)&Request[2] = htons(COMMAND); /* per table 9.1 in Net F/T user manual. */
@@ -61,7 +62,14 @@ void mtsATINetFTSensor::Startup()
     Socket.SetDestination(IP, Port);
 }
 
-void mtsATINetFTSensor::Cleanup()
+void mtsATINetFTSensor::Configure(const std::string &filename)
+{
+    if(NetFTConfig.LoadCalibrationFile(filename))
+        CMN_LOG_CLASS_RUN_WARNING << "Config File Loaded " << std::endl;
+
+}
+
+void mtsATINetFTSensor::Cleanup(void)
 {
     Socket.Close();
 }
@@ -71,10 +79,18 @@ void mtsATINetFTSensor::SetIPAddress(std::string ip)
     IP = ip;
 }
 
-void mtsATINetFTSensor::Run()
-{   
+void mtsATINetFTSensor::Run(void)
+{
+//    osaStopwatch stopWatch;
+//    stopWatch.Start();
     ProcessQueuedCommands();
     GetReadings();
+    if(IsSaturated())
+        CMN_LOG_CLASS_RUN_WARNING << "Sensor Saturated " << std::endl;
+
+//    stopWatch.Stop();
+//    std::cerr << "Time " << stopWatch.GetElapsedTime() << std::endl;
+//    stopWatch.Reset();
 }
 
 void mtsATINetFTSensor::GetReadings(void)
@@ -122,4 +138,21 @@ void mtsATINetFTSensor::RebiasFTData(void)
     InitialFTData.Assign(RawFTData);
     EventTriggers.RobotErrorMsg(std::string("Sensor ReBiased"));
     CMN_LOG_CLASS_RUN_VERBOSE << "FT Sensor Rebiased " << std::endl;
+}
+
+bool mtsATINetFTSensor::IsSaturated(void)
+{
+    vct6 MaxLoads = NetFTConfig.NetFT.GenInfo.Ranges;
+
+    for (int i = 0; i < MaxLoads.size(); ++i) {
+        if (FTData[i] > 0 && FTData[i] > MaxLoads[i] ||
+                (FTData[i] < 0 && FTData[i] < -MaxLoads[i]) )  {
+            EventTriggers.RobotErrorMsg(std::string("Sensor Saturated"));
+            Saturated = true;
+        }
+        else
+            Saturated = false;
+    }
+
+    return Saturated;
 }

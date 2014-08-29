@@ -38,6 +38,8 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstOSAbstraction/osaSleep.h>
 #include <cisstOSAbstraction/osaSocket.h>
 
+#include <sawATINetFT/mtsATINetFTConfig.h>
+
 //#define PORT 49152 /* Port the Net F/T always uses */
 #define COMMAND 2 /* Command code 2 starts streaming */
 #define NUM_SAMPLES 1 /* Will send 1 sample `before stopping */
@@ -60,20 +62,25 @@ public:
     void Cleanup(void);
     void CloseSocket(void);
     void SetIPAddress(std::string ip);
+    void Configure(const std::string &filename);
 
 protected:       
     void ConnectToSocket(void);
     void GetReadings(void);
     void RebiasFTData(void);
+    bool IsSaturated(void);
 
-private:
+private:    
+    // Configuration
+    mtsATINetFTConfig NetFTConfig;
+    bool Saturated;
 
     // Functions for events
     struct {
         mtsFunctionWrite RobotErrorMsg;
     } EventTriggers;
 
-
+    // SOcket Information
     osaSocket Socket;
     bool            programStart;
     bool            IsConnected;
