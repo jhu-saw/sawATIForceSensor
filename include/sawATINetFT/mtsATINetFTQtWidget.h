@@ -2,11 +2,10 @@
 /* ex: set filetype=cpp softtabstop=4 shiftwidth=4 tabstop=4 cindent expandtab: */
 
 /*
-
   Author(s):  Anton Deguet
   Created on: 2013-08-24
 
-  (C) Copyright 2013 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2013-2014 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -20,10 +19,9 @@ http://www.cisst.org/cisst/license.txt.
 #ifndef _mtsATINetFTQtWidget_h
 #define _mtsATINetFTQtWidget_h
 
-#include <cisstMultiTask.h>
-#include <cisstVector/vctQtWidgetFrame.h>
 #include <cisstVector/vctQtWidgetDynamicVector.h>
 #include <cisstMultiTask/mtsComponent.h>
+#include <cisstMultiTask/mtsVector.h>
 #include <cisstMultiTask/mtsQtWidgetIntervalStatistics.h>
 #include <cisstParameterTypes/prmPositionCartesianGet.h>
 
@@ -58,14 +56,6 @@ private:
     int TimerPeriodInMilliseconds;
 
 protected:
-    struct TeleOperationStruct {
-        mtsFunctionWrite    Enable;
-        mtsFunctionWrite    SetScale;
-        mtsFunctionRead     GetPositionCartesianMaster;
-        mtsFunctionRead     GetPositionCartesianSlave;
-        mtsFunctionRead     GetPeriodStatistics;
-    } TeleOperation;
-
     struct NetFTStruct {
         mtsFunctionVoid     RebiasFTData;
         //         mtsFunctionWrite    SetLogEnabled;
@@ -77,22 +67,14 @@ protected:
 
 private:
 
-    mtsDoubleVec    FTReadings;
-    //    mtsBool         LogEnabled;
-    mtsBool         IsSaturated;
-    vctQtWidgetDynamicVectorDoubleRead *QFTSensorValues;
-    //     QPushButton *logButton;
-    QPushButton *rebiasButton;
-
-
-    prmPositionCartesianGet         PositionMaster;
-    vctQtWidgetFrameDoubleRead      *QFRPositionMasterWidget;
-    prmPositionCartesianGet         PositionSlave;
-    vctQtWidgetFrameDoubleRead      *QFRPositionSlaveWidget;
+    mtsDoubleVec FTReadings;
+    mtsBool IsSaturated;
+    vctQtWidgetDynamicVectorDoubleRead * QFTSensorValues;
+    QPushButton * RebiasButton;
 
     // GUI: timing
-    mtsIntervalStatistics           IntervalStatistics;
-    mtsQtWidgetIntervalStatistics   *QMIntervalStatistics;
+    mtsIntervalStatistics IntervalStatistics;
+    mtsQtWidgetIntervalStatistics * QMIntervalStatistics;
 };
 
 CMN_DECLARE_SERVICES_INSTANTIATION(mtsATINetFTQtWidget);

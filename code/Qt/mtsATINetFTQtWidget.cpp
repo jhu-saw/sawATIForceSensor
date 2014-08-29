@@ -168,8 +168,8 @@ void mtsATINetFTQtWidget::setupUi()
 
     //     buttonLayout->addWidget(logButton);
 
-    rebiasButton = new QPushButton("Rebias");
-    buttonLayout->addWidget(rebiasButton);
+    RebiasButton = new QPushButton("Rebias");
+    buttonLayout->addWidget(RebiasButton);
 
     buttonLayout->addStretch();
 
@@ -186,6 +186,6 @@ void mtsATINetFTQtWidget::setupUi()
     resize(sizeHint());
 
     // setup Qt Connection
-    connect(rebiasButton, SIGNAL(clicked()), this, SLOT(RebiasFTSensor()));
+    connect(RebiasButton, SIGNAL(clicked()), this, SLOT(RebiasFTSensor()));
     //     connect(logButton   , SIGNAL(clicked()), this, SLOT(LogClicked())    );
 }

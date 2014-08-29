@@ -2,13 +2,10 @@
 /* ex: set filetype=cpp softtabstop=4 shiftwidth=4 tabstop=4 cindent expandtab: */
 
 /*
-$Id: $
+  Author(s):  Preetham Chalasani
+  Created on: 2013
 
-Author(s):  Preetham Chalasani
-Created on: 2013
-
-(C) Copyright 2006-2013 Johns Hopkins University (JHU), All Rights
-Reserved.
+  (C) Copyright 2013-2014 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -21,8 +18,8 @@ http://www.cisst.org/cisst/license.txt.
 */
 
 #include <cisstCommon/cmnConstants.h>
+#include <cisstMultiTask/mtsInterfaceProvided.h>
 
-#include <cisstOSAbstraction/osaStopwatch.h>
 #include <sawATINetFT/mtsATINetFTSensor.h>
 
 
@@ -32,13 +29,13 @@ mtsATINetFTSensor::mtsATINetFTSensor(const std::string &taskName):
     mtsTaskContinuous(taskName, 5000),
     Socket(osaSocket::UDP),
     Port(49152)
-{        
+{
     FTData.SetSize(6);
     RawFTData.SetSize(6);
     InitialFTData.SetSize(6);
     programStart = true;
 
-    mtsInterfaceProvided *socketInterface = AddInterfaceProvided("ProvidesATINetFTSensor");
+    mtsInterfaceProvided * socketInterface = AddInterfaceProvided("ProvidesATINetFTSensor");
 
     StateTable.AddData(FTData, "FTData");
     StateTable.AddData(IsConnected, "IsConneted");
@@ -50,11 +47,11 @@ mtsATINetFTSensor::mtsATINetFTSensor(const std::string &taskName):
 
     socketInterface->AddEventWrite(EventTriggers.RobotErrorMsg, "RobotErrorMsg", std::string(""));
 
-    StateTable.Advance();        
+    StateTable.Advance();
 }
 
 void mtsATINetFTSensor::Startup(void)
-{    
+{
     *(uint16*)&Request[0] = htons(0x1234); /* standard header. */
     *(uint16*)&Request[2] = htons(COMMAND); /* per table 9.1 in Net F/T user manual. */
     *(uint32*)&Request[4] = htonl(NUM_SAMPLES); /* see section 9.1 in Net F/T user manual. */
@@ -62,11 +59,12 @@ void mtsATINetFTSensor::Startup(void)
     Socket.SetDestination(IP, Port);
 }
 
-void mtsATINetFTSensor::Configure(const std::string &filename)
+void mtsATINetFTSensor::Configure(const std::string & filename)
 {
-    if(NetFTConfig.LoadCalibrationFile(filename))
-        CMN_LOG_CLASS_RUN_WARNING << "Config File Loaded " << std::endl;
-
+    if (NetFTConfig.LoadCalibrationFile(filename)) {
+        CMN_LOG_CLASS_RUN_WARNING << "Configure: file loaded - "
+                                  << filename << std::endl;
+    }
 }
 
 void mtsATINetFTSensor::Cleanup(void)
@@ -74,64 +72,56 @@ void mtsATINetFTSensor::Cleanup(void)
     Socket.Close();
 }
 
-void mtsATINetFTSensor::SetIPAddress(std::string ip)
+void mtsATINetFTSensor::SetIPAddress(const std::string & ip)
 {
     IP = ip;
 }
 
 void mtsATINetFTSensor::Run(void)
 {
-//    osaStopwatch stopWatch;
-//    stopWatch.Start();
     ProcessQueuedCommands();
     GetReadings();
-    if(IsSaturated())
-        CMN_LOG_CLASS_RUN_WARNING << "Sensor Saturated " << std::endl;
 
-//    stopWatch.Stop();
-//    std::cerr << "Time " << stopWatch.GetElapsedTime() << std::endl;
-//    stopWatch.Reset();
+    if (IsSaturated()) {
+        CMN_LOG_CLASS_RUN_WARNING << "Run: sensor saturated" << std::endl;
+    }
 }
 
 void mtsATINetFTSensor::GetReadings(void)
-{    
-
+{
     int result;
-    result = Socket.Send((const char *)Request, 8, 10*cmn_ms);
+    // try to send, but timeout after 10 ms
+    result = Socket.Send((const char *)Request, 8, 10.0 *cmn_ms);
     if (result == -1){
-        CMN_LOG_CLASS_RUN_WARNING << "GetReadings : UDP Send Failed " << std::endl;
+        CMN_LOG_CLASS_RUN_WARNING << "GetReadings: UDP send failed" << std::endl;
         return;
     }
 
-    result = Socket.Receive((char *)Response, 36, 10*cmn_ms);
-    if (result != -1){
-
+    // if we were able to send we should now receive
+    result = Socket.Receive((char *)Response, 36, 10.0 * cmn_ms);
+    if (result != -1) {
         this->Rdt_sequence = ntohl(*(uint32*)&Response[0]);
         this->Ft_sequence = ntohl(*(uint32*)&Response[4]);
         this->Status = ntohl(*(uint32*)&Response[8]);
         int temp;
-        for( int i = 0; i < 6; i++ ) {
+        for (int i = 0; i < 6; i++ ) {
             temp = ntohl(*(int32*)&Response[12 + i * 4]);
-            if(programStart)
-            {
+            if (programStart) {
                 InitialFTData[i] = (double)((double)temp/1000000);
-                std::cout << InitialFTData[i] << " ";
+                CMN_LOG_CLASS_INIT_DEBUG << "Initial data: " << InitialFTData[i] << " ";
             }
-
             RawFTData[i]= (double)((double)temp/1000000);
             FTData[i] = RawFTData[i] - InitialFTData[i];
             FTData.SetValid(true);
         }
     }
     else {
-        CMN_LOG_CLASS_RUN_ERROR << "GetReadings : UDP Receive Failed" << std::endl;
+        CMN_LOG_CLASS_RUN_ERROR << "GetReadings: UDP receive failed" << std::endl;
         FTData.SetValid(false);
         FTData.Zeros();
     }
-
     programStart = false;
 }
-
 
 void mtsATINetFTSensor::RebiasFTData(void)
 {
@@ -143,16 +133,13 @@ void mtsATINetFTSensor::RebiasFTData(void)
 bool mtsATINetFTSensor::IsSaturated(void)
 {
     vct6 MaxLoads = NetFTConfig.NetFT.GenInfo.Ranges;
-
-    for (int i = 0; i < MaxLoads.size(); ++i) {
+    Saturated = false;
+    for (size_t i = 0; i < MaxLoads.size(); ++i) {
         if (FTData[i] > 0 && FTData[i] > MaxLoads[i] ||
-                (FTData[i] < 0 && FTData[i] < -MaxLoads[i]) )  {
+            (FTData[i] < 0 && FTData[i] < -MaxLoads[i]) )  {
             EventTriggers.RobotErrorMsg(std::string("Sensor Saturated"));
             Saturated = true;
         }
-        else
-            Saturated = false;
     }
-
     return Saturated;
 }

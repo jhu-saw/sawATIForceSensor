@@ -2,13 +2,10 @@
 /* ex: set filetype=cpp softtabstop=4 shiftwidth=4 tabstop=4 cindent expandtab: */
 
 /*
-$Id: $
+  Author(s):  Preetham Chalasani
+  Created on: 2013
 
-Author(s):  Preetham Chalasani
-Created on: 2013
-
-(C) Copyright 2006-2013 Johns Hopkins University (JHU), All Rights
-Reserved.
+  (C) Copyright 2013-2014 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -20,23 +17,12 @@ http://www.cisst.org/cisst/license.txt.
 
 */
 
-#ifndef _mtsATINetFTSensor_H
-#define _mtsATINetFTSensor_H
+#ifndef _mtsATINetFTSensor_h
+#define _mtsATINetFTSensor_h
 
-#ifdef _WIN32
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#pragma comment(lib, "Ws2_32.lib")
-#else
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#endif
-
-#include <cisstMultiTask.h>
-#include <cisstCommon.h>
-#include <cisstOSAbstraction/osaSleep.h>
 #include <cisstOSAbstraction/osaSocket.h>
+#include <cisstMultiTask/mtsTaskContinuous.h>
+#include <cisstMultiTask/mtsVector.h>
 
 #include <sawATINetFT/mtsATINetFTConfig.h>
 
@@ -50,27 +36,30 @@ typedef unsigned short uint16;
 typedef short int16;
 typedef unsigned char byte;
 
-class mtsATINetFTSensor: public mtsTaskContinuous {
+class mtsATINetFTSensor: public mtsTaskContinuous
+{
     CMN_DECLARE_SERVICES(CMN_NO_DYNAMIC_CREATION, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS );
 
 public:
-    mtsATINetFTSensor(const std::string & taskName);
-    ~mtsATINetFTSensor(){ Socket.Close(); };
+    mtsATINetFTSensor(const std::string & componentName);
+    ~mtsATINetFTSensor() {
+        Socket.Close();
+    }
 
     void Startup(void);
     void Run(void);
     void Cleanup(void);
     void CloseSocket(void);
-    void SetIPAddress(std::string ip);
-    void Configure(const std::string &filename);
+    void SetIPAddress(const std::string & ip);
+    void Configure(const std::string & filename);
 
-protected:       
+protected:
     void ConnectToSocket(void);
     void GetReadings(void);
     void RebiasFTData(void);
     bool IsSaturated(void);
 
-private:    
+private:
     // Configuration
     mtsATINetFTConfig NetFTConfig;
     bool Saturated;
@@ -100,4 +89,4 @@ private:
 
 CMN_DECLARE_SERVICES_INSTANTIATION(mtsATINetFTSensor);
 
-#endif
+#endif // _mtsATINetFTSensor_h
