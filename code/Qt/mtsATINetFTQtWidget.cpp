@@ -27,8 +27,6 @@ http://www.cisst.org/cisst/license.txt.
 
 // cisst
 #include <cisstMultiTask/mtsInterfaceRequired.h>
-#include <cisstParameterTypes/prmPositionJointGet.h>
-#include <cisstParameterTypes/prmPositionJointSet.h>
 
 #include <sawATINetFT/mtsATINetFTQtWidget.h>
 

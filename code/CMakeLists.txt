@@ -2,89 +2,74 @@
 # Reserved.
 #
 # --- begin cisst license - do not edit ---
-# 
+#
 # This software is provided "as is" under an open source license, with
 # no warranty.  The complete license can be found in license.txt and
 # http://www.cisst.org/cisst/license.txt.
-# 
+#
 # --- end cisst license ---
 
-set(
-	REQUIRED_CISST_LIBRARIES
-	cisstCommon
-	cisstCommonXML
-	cisstVector
-	cisstOSAbstraction
-	cisstMultiTask
-	cisstParameterTypes 
-	)
+set (REQUIRED_CISST_LIBRARIES
+     cisstCommon
+     cisstCommonXML
+     cisstVector
+     cisstOSAbstraction
+     cisstMultiTask
+     cisstParameterTypes
+     )
 
-FIND_PACKAGE( cisst REQUIRED ${REQUIRED_CISST_LIBRARIES} )
+find_package (cisst REQUIRED ${REQUIRED_CISST_LIBRARIES})
 
-if (cisst_FOUND)
+if (cisst_FOUND_AS_REQUIRED)
 
-	# load cisst configuration
-        INCLUDE(${CISST_USE_FILE})
+  # load cisst configuration
+  include (${CISST_USE_FILE})
 
-	# create/configure file for find_package (sawATINetFT)
-	set (sawATINetFT_INCLUDE_DIR "${sawATINetFT_SOURCE_DIR}/include")
-	set (sawATINetFT_LIBRARY_DIR "${LIBRARY_OUTPUT_PATH}")
-	set (sawATINetFT_LIBRARIES sawATINetFT)
+  # create/configure file for find_package (sawATINetFT)
+  set (sawATINetFT_INCLUDE_DIR "${sawATINetFT_SOURCE_DIR}/include")
+  set (sawATINetFT_LIBRARY_DIR "${LIBRARY_OUTPUT_PATH}")
+  set (sawATINetFT_LIBRARIES sawATINetFT)
 
-	include_directories (${sawATINetFT_INCLUDE_DIR})
-	set (sawATINetFT_HEADER_DIR "${sawATINetFT_INCLUDE_DIR}/sawATINetFT")
+  include_directories (${sawATINetFT_INCLUDE_DIR})
+  set (sawATINetFT_HEADER_DIR "${sawATINetFT_INCLUDE_DIR}/sawATINetFT")
 
-	set (HEADER_FILES
-                #${sawATINetFT_HEADER_DIR}/devNetFTSensorATITask.h
-                #${sawATINetFT_HEADER_DIR}/devNetFTSensorATI.h
-		${sawATINetFT_HEADER_DIR}/loggerTask.h
-                ${sawATINetFT_HEADER_DIR}/mtsATINetFTSensor.h
-                #${sawATINetFT_HEADER_DIR}/ftconfig.h
-                #${sawATINetFT_HEADER_DIR}/ftrt.h
-                ${sawATINetFT_HEADER_DIR}/mtsATINetFTQtWidget
-		)
+  set (HEADER_FILES
+       ${sawATINetFT_HEADER_DIR}/loggerTask.h
+       ${sawATINetFT_HEADER_DIR}/mtsATINetFTSensor.h
+       ${sawATINetFT_HEADER_DIR}/mtsATINetFTQtWidget
+       )
 
-	set (SOURCE_FILES
-                #devNetFTSensorATITask.cpp
-                #devNetFTSensorATI.cpp
-		loggerTask.cpp
-                mtsATINetFTSensor.cpp
-                #ftconfig.c
-                #ftrt.c
-		)
+  set (SOURCE_FILES
+       loggerTask.cpp
+       mtsATINetFTSensor.cpp
+       )
 
-	add_library (sawATINetFT ${HEADER_FILES} ${SOURCE_FILES})
-	cisst_target_link_libraries (sawATINetFT ${REQUIRED_CISST_LIBRARIES})
-	set_property (TARGET sawATINetFT PROPERTY FOLDER "sawATINetFT")
+  add_library (sawATINetFT ${HEADER_FILES} ${SOURCE_FILES})
+  cisst_target_link_libraries (sawATINetFT ${REQUIRED_CISST_LIBRARIES})
+  set_property (TARGET sawATINetFT PROPERTY FOLDER "sawATINetFT")
 
-	# # link against non cisst libraries and cisst components
-	# target_link_libraries (sawATINetFT ${sawConstraintController_LIBRARIES}
-	# 	${sawRobotIO1394_LIBRARIES}
-	# 	${sawControllers_LIBRARIES}
-	# 	#${orocos_kdl_LIBRARIES}
-	# 	)
+  # add Qt code
+  if (CISST_HAS_QT)
+    add_subdirectory (Qt)
+    set (sawATINetFT_LIBRARIES ${sawATINetFT_LIBRARIES} ${sawATINetFTQt_LIBRARIES})
+  endif (CISST_HAS_QT)
 
-	# add Qt code
-	add_subdirectory (Qt)
-        set (sawATINetFT_LIBRARIES ${sawATINetFT_LIBRARIES} ${sawATINetFTQt_LIBRARIES})
+  configure_file ("${CMAKE_CURRENT_SOURCE_DIR}/sawATINetFTConfig.cmake.in"
+		  "${sawATINetFT_BINARY_DIR}/sawATINetFTConfig.cmake"
+		   @ONLY@)
 
-	configure_file (
-		"${CMAKE_CURRENT_SOURCE_DIR}/sawATINetFTConfig.cmake.in"
-		"${sawATINetFT_BINARY_DIR}/sawATINetFTConfig.cmake"
-		@ONLY@)
+  # Install targets for headers and library
+  install (DIRECTORY
+           ${sawATINetFT_INCLUDE_DIR}/sawATINetFT
+           DESTINATION include
+           PATTERN .svn EXCLUDE)
 
-	# Install targets for headers and library
-	install (DIRECTORY
-		${sawATINetFT_INCLUDE_DIR}/sawATINetFT
-		DESTINATION include
-		PATTERN .svn EXCLUDE)
+  install (TARGETS sawATINetFT
+           RUNTIME DESTINATION bin
+           LIBRARY DESTINATION lib
+           ARCHIVE DESTINATION lib)
 
-	install (TARGETS sawATINetFT
-		RUNTIME DESTINATION bin
-		LIBRARY DESTINATION lib
-		ARCHIVE DESTINATION lib)
+  install (FILES "${sawATINetFT_BINARY_DIR}/sawATINetFTConfig.cmake"
+           DESTINATION "${CISST_CMAKE_INSTALL_SUFFIX}/saw")
 
-	install (FILES "${sawATINetFT_BINARY_DIR}/sawATINetFTConfig.cmake"
-		DESTINATION "${CISST_CMAKE_INSTALL_SUFFIX}/saw")  
-
-endif (cisst_FOUND)
+endif (cisst_FOUND_AS_REQUIRED)
