@@ -36,13 +36,21 @@ int main(int argc, char ** argv)
     cmnCommandLineOptions options;
     std::string gcmip = "-1";
     std::string configFile;
+    std::string ftip = "192.168.1.8";
 
     options.AddOptionOneValue("c", "configuration",
                               "XML configuration file",
                               cmnCommandLineOptions::REQUIRED_OPTION, &configFile);
+
+    options.AddOptionOneValue("i", "ftip",
+                              "Force sensor IP address",
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &ftip);
+
     options.AddOptionOneValue("g", "gcmip",
                               "global component manager IP address",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &gcmip);
+
+
 
     std::string errorMessage;
     if (!options.Parse(argc, argv, errorMessage)) {
@@ -70,7 +78,7 @@ int main(int argc, char ** argv)
     componentManager->AddComponent(qtAppTask);
 
     mtsATINetFTSensor * forceSensor = new mtsATINetFTSensor("ForceSensor");       // Continuous
-    forceSensor->SetIPAddress("192.168.1.1");      // IP address of the FT sensor
+    forceSensor->SetIPAddress(ftip);      // IP address of the FT sensor
     forceSensor->Configure(configFile);
     componentManager->AddComponent(forceSensor);
 
