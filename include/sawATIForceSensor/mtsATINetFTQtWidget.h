@@ -28,6 +28,9 @@ http://www.cisst.org/cisst/license.txt.
 #include <QtCore>
 #include <QtGui>
 
+#if CISST_HAS_QT5
+#include <QtWidgets>
+#endif
 
 class mtsATINetFTQtWidget: public QWidget, public mtsComponent
 {
