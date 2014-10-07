@@ -42,15 +42,12 @@ if (cisst_FOUND_AS_REQUIRED)
   endif (CISST_HAS_QT4)
 
   add_library (sawATIForceSensorQt
+               ${sawATIForceSensor_HEADER_DIR}/sawATIForceSensorQtExport.h
                ${sawATIForceSensor_HEADER_DIR}/mtsATINetFTQtWidget.h
                mtsATINetFTQtWidget.cpp
                ${SAW_ATINETFT_QT_WRAP_CPP})
   set_property (TARGET sawATIForceSensorQt PROPERTY FOLDER "sawATIForceSensor")
   cisst_target_link_libraries (sawATIForceSensorQt ${REQUIRED_CISST_LIBRARIES})
-
-  if (CISST_HAS_QT5)
-    qt5_use_modules (sawATIForceSensorQt Core Widgets OpenGL)
-  endif (CISST_HAS_QT5)
 
   # make sure the new library is known by the parent folder to add to the config file
   set (sawATIForceSensorQt_LIBRARIES sawATIForceSensorQt PARENT_SCOPE)

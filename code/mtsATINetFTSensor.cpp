@@ -22,6 +22,28 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstMultiTask/mtsInterfaceProvided.h>
 
 #include <sawATIForceSensor/mtsATINetFTSensor.h>
+
+#define ATI_PORT 49152 /* Port the Net F/T always uses */
+#define ATI_COMMAND 2 /* Command code 2 starts streaming */
+#define ATI_NUM_SAMPLES 1 /* Will send 1 sample `before stopping */
+
+typedef unsigned int uint32;
+typedef int int32;
+typedef unsigned short uint16;
+typedef short int16;
+typedef unsigned char byte;
+
+class mtsATINetFTSensorData {
+public:
+    uint16 Port;
+    uint32 RdtSequence;
+    uint32 FtSequence;
+    uint32 Status;
+
+    byte Request[8];             /* The request data sent to the Net F/T. */
+    byte Response[36];			/* The raw response data received from the Net F/T. */
+};
+
 #if (CISST_OS == CISST_LINUX)
 #include <netinet/in.h>
 #endif
@@ -30,35 +52,37 @@ CMN_IMPLEMENT_SERVICES(mtsATINetFTSensor)
 
 mtsATINetFTSensor::mtsATINetFTSensor(const std::string & componentName):
     mtsTaskContinuous(componentName, 5000),
-    Socket(osaSocket::UDP),
-    FirstRun(true),
-    Port(49152)
+    Socket(osaSocket::UDP)
 {
-    FTData.SetSize(6);
-    RawFTData.SetSize(6);
-    InitialFTData.SetSize(6);
+    Data = new mtsATINetFTSensorData;
 
-    StateTable.AddData(FTData, "FTData");
+    Data->Port = ATI_PORT;
+
+    ForceTorque.SetSize(6);
+    RawForceTorque.SetSize(6);
+    Bias.SetSize(6);
+
+    StateTable.AddData(ForceTorque, "ForceTorque");
     StateTable.AddData(IsConnected, "IsConnected");
 
     mtsInterfaceProvided * interfaceProvided = AddInterfaceProvided("ProvidesATINetFTSensor");
     if (interfaceProvided) {
-        interfaceProvided->AddCommandReadState(StateTable, FTData, "GetFTData");
+        interfaceProvided->AddCommandReadState(StateTable, ForceTorque, "GetFTData");
         interfaceProvided->AddCommandReadState(StateTable, IsConnected, "GetSocketStatus");
         interfaceProvided->AddCommandReadState(StateTable, StateTable.PeriodStats,
                                                "GetPeriodStatistics");
-        interfaceProvided->AddCommandVoid(&mtsATINetFTSensor::RebiasFTData, this, "RebiasFTData");
-        interfaceProvided->AddEventWrite(EventTriggers.RobotErrorMsg, "RobotErrorMsg", std::string(""));
+        interfaceProvided->AddCommandVoid(&mtsATINetFTSensor::Rebias, this, "Rebias");
+        interfaceProvided->AddEventWrite(EventTriggers.ErrorMsg, "ErrorMsg", std::string(""));
     }
 }
 
 void mtsATINetFTSensor::Startup(void)
 {
-    *(uint16*)&Request[0] = htons(0x1234); /* standard header. */
-    *(uint16*)&Request[2] = htons(COMMAND); /* per table 9.1 in Net F/T user manual. */
-    *(uint32*)&Request[4] = htonl(NUM_SAMPLES); /* see section 9.1 in Net F/T user manual. */
+    *(uint16*)&(Data->Request)[0] = htons(0x1234); /* standard header. */
+    *(uint16*)&(Data->Request)[2] = htons(ATI_COMMAND); /* per table 9.1 in Net F/T user manual. */
+    *(uint32*)&(Data->Request)[4] = htonl(ATI_NUM_SAMPLES); /* see section 9.1 in Net F/T user manual. */
 
-    Socket.SetDestination(IP, Port);
+    Socket.SetDestination(IP, Data->Port);
 }
 
 void mtsATINetFTSensor::Configure(const std::string & filename)
@@ -93,42 +117,37 @@ void mtsATINetFTSensor::GetReadings(void)
 {
     int result;
     // try to send, but timeout after 10 ms
-    result = Socket.Send((const char *)Request, 8, 10.0 *cmn_ms);
+    result = Socket.Send((const char *)(Data->Request), 8, 10.0 * cmn_ms);
     if (result == -1) {
         CMN_LOG_CLASS_RUN_WARNING << "GetReadings: UDP send failed" << std::endl;
         return;
     }
 
     // if we were able to send we should now receive
-    result = Socket.Receive((char *)Response, 36, 10.0 * cmn_ms);
+    result = Socket.Receive((char *)(Data->Response), 36, 10.0 * cmn_ms);
     if (result != -1) {
-        this->Rdt_sequence = ntohl(*(uint32*)&Response[0]);
-        this->Ft_sequence = ntohl(*(uint32*)&Response[4]);
-        this->Status = ntohl(*(uint32*)&Response[8]);
+        this->Data->RdtSequence = ntohl(*(uint32*)&(Data->Response)[0]);
+        this->Data->FtSequence = ntohl(*(uint32*)&(Data->Response)[4]);
+        this->Data->Status = ntohl(*(uint32*)&(Data->Response)[8]);
         int temp;
         for (int i = 0; i < 6; i++ ) {
-            temp = ntohl(*(int32*)&Response[12 + i * 4]);
-            if (FirstRun) {
-                InitialFTData[i] = (double)((double)temp/1000000);
-                CMN_LOG_CLASS_INIT_DEBUG << "Initial data: " << InitialFTData[i] << " ";
-            }
-            RawFTData[i]= (double)((double)temp/1000000);
-            FTData[i] = RawFTData[i] - InitialFTData[i];
-            FTData.SetValid(true);
+            temp = ntohl(*(int32*)&(Data->Response)[12 + i * 4]);
+            RawForceTorque[i]= (double)((double)temp/1000000);
+            ForceTorque[i] = RawForceTorque[i] - Bias[i];
+            ForceTorque.SetValid(true);
         }
     }
     else {
         CMN_LOG_CLASS_RUN_ERROR << "GetReadings: UDP receive failed" << std::endl;
-        FTData.SetValid(false);
-        FTData.Zeros();
+        ForceTorque.SetValid(false);
+        ForceTorque.Zeros();
     }
-    FirstRun = false;
 }
 
-void mtsATINetFTSensor::RebiasFTData(void)
+void mtsATINetFTSensor::Rebias(void)
 {
-    InitialFTData.Assign(RawFTData);
-    EventTriggers.RobotErrorMsg(std::string("Sensor ReBiased"));
+    Bias.Assign(RawForceTorque);
+    EventTriggers.ErrorMsg(std::string("Sensor ReBiased"));
     CMN_LOG_CLASS_RUN_VERBOSE << "FT Sensor Rebiased " << std::endl;
 }
 
@@ -137,9 +156,9 @@ bool mtsATINetFTSensor::IsSaturated(void)
     vct6 MaxLoads = NetFTConfig.NetFT.GenInfo.Ranges;
     Saturated = false;
     for (size_t i = 0; i < MaxLoads.size(); ++i) {
-        if (((FTData[i] > 0) && (FTData[i] > MaxLoads[i])) ||
-            ((FTData[i] < 0) && (FTData[i] < -MaxLoads[i])) )  {
-            EventTriggers.RobotErrorMsg(std::string("Sensor Saturated"));
+        if (((ForceTorque[i] > 0) && (ForceTorque[i] > MaxLoads[i])) ||
+            ((ForceTorque[i] < 0) && (ForceTorque[i] < -MaxLoads[i])) )  {
+            EventTriggers.ErrorMsg(std::string("Sensor Saturated"));
             Saturated = true;
         }
     }

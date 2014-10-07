@@ -38,6 +38,7 @@ if (cisst_FOUND_AS_REQUIRED)
   set (sawATIForceSensor_HEADER_DIR "${sawATIForceSensor_INCLUDE_DIR}/sawATIForceSensor")
 
   set (HEADER_FILES
+       ${sawATIForceSensor_HEADER_DIR}/sawATIForceSensorExport.h
        ${sawATIForceSensor_HEADER_DIR}/mtsATINetFTSensor.h
        ${sawATIForceSensor_HEADER_DIR}/mtsATINetFTConfig.h
        )

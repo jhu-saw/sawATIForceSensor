@@ -2,7 +2,7 @@
 /* ex: set filetype=cpp softtabstop=4 shiftwidth=4 tabstop=4 cindent expandtab: */
 
 /*
-  Author(s):  Preetham Chalasani
+  Author(s):  Preetham Chalasani, Anton Deguet
   Created on: 2013
 
   (C) Copyright 2013-2014 Johns Hopkins University (JHU), All Rights Reserved.
@@ -20,9 +20,14 @@ http://www.cisst.org/cisst/license.txt.
 #define _mtsATINetFTConfig_h
 
 #include <iostream>
-#include <cisstVector.h>
+#include <cisstCommon/cmnGenericObject.h>
+#include <cisstVector/vctFixedSizeVectorTypes.h>
+#include <cisstVector/vctDynamicMatrixTypes.h>
 
-class mtsATINetFTConfig : public cmnGenericObject
+// Always include last
+#include <sawATIForceSensor/sawATIForceSensorExport.h>
+
+class CISST_EXPORT mtsATINetFTConfig : public cmnGenericObject
 {
     CMN_DECLARE_SERVICES(CMN_NO_DYNAMIC_CREATION, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
 

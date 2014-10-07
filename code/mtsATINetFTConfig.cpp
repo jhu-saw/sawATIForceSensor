@@ -21,9 +21,9 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstCommon/cmnXMLPath.h>
 #include <cisstCommon/cmnPath.h>
 #include <cisstCommon/cmnUnits.h>
-#include <cisstOSAbstraction.h>
+#include <cisstVector/vctDynamicVectorTypes.h>
 
-CMN_IMPLEMENT_SERVICES(mtsATINetFTConfig)
+CMN_IMPLEMENT_SERVICES(mtsATINetFTConfig);
 
 mtsATINetFTConfig::mtsATINetFTConfig()
 {

@@ -2,7 +2,7 @@
 /* ex: set filetype=cpp softtabstop=4 shiftwidth=4 tabstop=4 cindent expandtab: */
 
 /*
-  Author(s):  Preetham Chalasani
+  Author(s):  Preetham Chalasani, Anton Deguet
   Created on: 2013
 
   (C) Copyright 2013-2014 Johns Hopkins University (JHU), All Rights Reserved.
@@ -25,17 +25,13 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <sawATIForceSensor/mtsATINetFTConfig.h>
 
-//#define PORT 49152 /* Port the Net F/T always uses */
-#define COMMAND 2 /* Command code 2 starts streaming */
-#define NUM_SAMPLES 1 /* Will send 1 sample `before stopping */
+// forward declaration for internal data
+class mtsATINetFTSensorData;
 
-typedef unsigned int uint32;
-typedef int int32;
-typedef unsigned short uint16;
-typedef short int16;
-typedef unsigned char byte;
+// Always include last
+#include <sawATIForceSensor/sawATIForceSensorExport.h>
 
-class mtsATINetFTSensor: public mtsTaskContinuous
+class CISST_EXPORT mtsATINetFTSensor: public mtsTaskContinuous
 {
     CMN_DECLARE_SERVICES(CMN_NO_DYNAMIC_CREATION, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
 
@@ -55,7 +51,7 @@ public:
 protected:
     void ConnectToSocket(void);
     void GetReadings(void);
-    void RebiasFTData(void);
+    void Rebias(void);
     bool IsSaturated(void);
 
 private:
@@ -65,25 +61,19 @@ private:
 
     // Functions for events
     struct {
-        mtsFunctionWrite RobotErrorMsg;
+        mtsFunctionWrite ErrorMsg;
     } EventTriggers;
 
     // SOcket Information
     osaSocket Socket;
-    bool         FirstRun;
     bool         IsConnected;
-    mtsDoubleVec FTData;
-    mtsDoubleVec RawFTData;
-    mtsDoubleVec InitialFTData;
+    mtsDoubleVec ForceTorque;
+    mtsDoubleVec RawForceTorque;
+    mtsDoubleVec Bias;
 
     std::string  IP;
-    uint16       Port;
-    uint32       Rdt_sequence;
-    uint32       Ft_sequence;
-    uint32       Status;
 
-    byte         Request[8];             /* The request data sent to the Net F/T. */
-    byte         Response[36];			/* The raw response data received from the Net F/T. */
+    mtsATINetFTSensorData * Data;
 };
 
 CMN_DECLARE_SERVICES_INSTANTIATION(mtsATINetFTSensor);

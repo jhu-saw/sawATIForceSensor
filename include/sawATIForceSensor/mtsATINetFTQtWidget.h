@@ -25,14 +25,13 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstMultiTask/mtsQtWidgetIntervalStatistics.h>
 #include <cisstParameterTypes/prmPositionCartesianGet.h>
 
-#include <QtCore>
-#include <QtGui>
+#include <QWidget>
+#include <QPushButton>
 
-#if CISST_HAS_QT5
-#include <QtWidgets>
-#endif
+// Always include last
+#include <sawATIForceSensor/sawATIForceSensorQtExport.h>
 
-class mtsATINetFTQtWidget: public QWidget, public mtsComponent
+class CISST_EXPORT mtsATINetFTQtWidget: public QWidget, public mtsComponent
 {
     Q_OBJECT;
     CMN_DECLARE_SERVICES(CMN_DYNAMIC_CREATION_ONEARG, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
