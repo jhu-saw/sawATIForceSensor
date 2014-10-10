@@ -39,7 +39,7 @@ mtsATINetFTQtWidget::mtsATINetFTQtWidget(const std::string & componentName, doub
     interfaceRequired = AddInterfaceRequired("RequiresATINetFTSensor");
     if(interfaceRequired) {
         interfaceRequired->AddFunction("GetFTData", ForceSensor.GetFTData);
-        interfaceRequired->AddFunction("RebiasFTData", ForceSensor.RebiasFTData);
+        interfaceRequired->AddFunction("Rebias", ForceSensor.RebiasFTData);
         interfaceRequired->AddFunction("GetPeriodStatistics", ForceSensor.GetPeriodStatistics);
     }
 

@@ -86,18 +86,18 @@ int main(int argc, char ** argv)
     componentManager->AddComponent(forceSensorGUI);
 
     mtsTextToSpeech * textToSpeech = new mtsTextToSpeech;
-    textToSpeech->AddInterfaceRequiredForEventString("ErrorMsg", "RobotErrorMsg");
+    textToSpeech->AddInterfaceRequiredForEventString("ErrorMsg", "ErrorMsg");
     textToSpeech->SetPreemptive(true);
     componentManager->AddComponent(textToSpeech);
 
-    mtsCollectorState *stateCollector = new mtsCollectorState(forceSensor->GetName(),
-                                                              forceSensor->GetDefaultStateTableName(),
-                                                              mtsCollectorBase::COLLECTOR_FILE_FORMAT_CSV);
+//    mtsCollectorState *stateCollector = new mtsCollectorState(forceSensor->GetName(),
+//                                                              forceSensor->GetDefaultStateTableName(),
+//                                                              mtsCollectorBase::COLLECTOR_FILE_FORMAT_CSV);
 
-    stateCollector->AddSignal("FTData");
-    componentManager->AddComponent(stateCollector);
-    stateCollector->UseSeparateLogFileDefault();
-    stateCollector->Connect();
+//    stateCollector->AddSignal("FTData");
+//    componentManager->AddComponent(stateCollector);
+//    stateCollector->UseSeparateLogFileDefault();
+//    stateCollector->Connect();
 
     componentManager->Connect(textToSpeech->GetName(), "ErrorMsg", "ForceSensor", "ProvidesATINetFTSensor");
 
@@ -105,7 +105,7 @@ int main(int argc, char ** argv)
                               "ForceSensor", "ProvidesATINetFTSensor");
 
     // create and start all tasks
-    stateCollector->StartCollection(0.0);
+//    stateCollector->StartCollection(0.0);
 
     componentManager->CreateAll();
     componentManager->WaitForStateAll(mtsComponentState::READY);
@@ -113,7 +113,7 @@ int main(int argc, char ** argv)
     componentManager->WaitForStateAll(mtsComponentState::ACTIVE);
 
     std::cerr << CMN_LOG_DETAILS << " to be removed" << std::endl;
-    stateCollector->StopCollection(0.0);
+//    stateCollector->StopCollection(0.0);
 
     // kill all tasks and perform cleanup
     componentManager->KillAll();
