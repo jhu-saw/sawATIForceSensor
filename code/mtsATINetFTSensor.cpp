@@ -63,11 +63,13 @@ mtsATINetFTSensor::mtsATINetFTSensor(const std::string & componentName):
     Bias.SetSize(6);
 
     StateTable.AddData(ForceTorque, "ForceTorque");
+    StateTable.AddData(RawForceTorque, "RawForceTorque");
     StateTable.AddData(IsConnected, "IsConnected");
 
     mtsInterfaceProvided * interfaceProvided = AddInterfaceProvided("ProvidesATINetFTSensor");
     if (interfaceProvided) {
         interfaceProvided->AddCommandReadState(StateTable, ForceTorque, "GetFTData");
+        interfaceProvided->AddCommandReadState(StateTable, RawForceTorque, "GetRawFTData");
         interfaceProvided->AddCommandReadState(StateTable, IsConnected, "GetSocketStatus");
         interfaceProvided->AddCommandReadState(StateTable, StateTable.PeriodStats,
                                                "GetPeriodStatistics");
@@ -146,7 +148,16 @@ void mtsATINetFTSensor::GetReadings(void)
 
 void mtsATINetFTSensor::Rebias(void)
 {
-    Bias.Assign(RawForceTorque);
+//    Bias.Assign(RawForceTorque);
+    *(uint16*)&(Data->Request)[2] = htons(0x0042); /* per table 9.1 in Net F/T user manual. */
+
+    // try to send, but timeout after 10 ms
+    int result = Socket.Send((const char *)(Data->Request), 8, 10.0 * cmn_ms);
+    if (result == -1) {
+        CMN_LOG_CLASS_RUN_WARNING << "GetReadings: UDP send failed" << std::endl;
+        return;
+    }
+
     EventTriggers.ErrorMsg(std::string("Sensor ReBiased"));
     CMN_LOG_CLASS_RUN_VERBOSE << "FT Sensor Rebiased " << std::endl;
 }

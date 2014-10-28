@@ -35,7 +35,7 @@ if (cisst_FOUND_AS_REQUIRED)
   # for Qt generated header files
   include_directories (${CMAKE_CURRENT_BINARY_DIR})
   if (CISST_HAS_QT4)
-    qt4_wrap_cpp (SAW_ATINETFT_QT_WRAP_CPP
+    qt4_wrap_cpp(SAW_ATINETFT_QT_WRAP_CPP
                   ${sawATIForceSensor_HEADER_DIR}/mtsATINetFTQtWidget.h)
   else (CISST_HAS_QT4)
     set (CMAKE_AUTOMOC ON)

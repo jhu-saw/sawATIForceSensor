@@ -19,14 +19,16 @@ http://www.cisst.org/cisst/license.txt.
 #ifndef _mtsATINetFTQtWidget_h
 #define _mtsATINetFTQtWidget_h
 
-#include <cisstVector/vctQtWidgetDynamicVector.h>
 #include <cisstMultiTask/mtsComponent.h>
 #include <cisstMultiTask/mtsVector.h>
 #include <cisstMultiTask/mtsQtWidgetIntervalStatistics.h>
 #include <cisstParameterTypes/prmPositionCartesianGet.h>
 
 #include <QWidget>
+#include <QtGui>
 #include <QPushButton>
+#include <QDoubleSpinBox>
+
 
 // Always include last
 #include <sawATIForceSensor/sawATIForceSensorQtExport.h>
@@ -47,10 +49,6 @@ public:
 protected:
     virtual void closeEvent(QCloseEvent * event);
 
-private slots:
-    void timerEvent(QTimerEvent * event);
-    void RebiasFTSensor(void);
-
 private:
     //! setup TeleOperation controller GUI
     void setupUi(void);
@@ -60,22 +58,40 @@ protected:
     struct NetFTStruct {
         mtsFunctionVoid RebiasFTData;
         mtsFunctionRead GetFTData;
+        mtsFunctionRead GetRawFTData;
         mtsFunctionRead GetIsSaturated;
         mtsFunctionRead GetPeriodStatistics;
+
+        mtsDoubleVec RawFTReadings;
+        mtsDoubleVec FilteredFTReadings;
     } ForceSensor;
 
+    struct SimulatedFTStruct {
+        mtsDoubleVec RawFTReadings;
+        mtsDoubleVec FilteredFTReadings;
+    } Simulated;
 
 private:
 
-    mtsDoubleVec FTReadings;
+    bool SimulateFT;
     mtsBool IsSaturated;
-    vctQtWidgetDynamicVectorDoubleRead * QFTSensorValues;
+    QDoubleSpinBox * QFTRawSensorValues[6];
+    QDoubleSpinBox * QFTFilteredSensorValues[6];
 
     QPushButton * RebiasButton;
+    QCheckBox * SimCheckBox;
+    QPushButton * CloneFTButton;
+    QLabel * ConnectionStatus;
 
     // Timing
     mtsIntervalStatistics IntervalStatistics;
     mtsQtWidgetIntervalStatistics * QMIntervalStatistics;
+
+private slots:
+    void timerEvent(QTimerEvent * event);
+    void RebiasFTSensor(void);
+    void CloneFTSensor(void);
+    void SimulateChecked(bool);
 };
 
 CMN_DECLARE_SERVICES_INSTANTIATION(mtsATINetFTQtWidget);
