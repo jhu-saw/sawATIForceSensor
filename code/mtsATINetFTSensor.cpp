@@ -60,7 +60,6 @@ mtsATINetFTSensor::mtsATINetFTSensor(const std::string & componentName):
 
     ForceTorque.SetSize(6);
     RawForceTorque.SetSize(6);
-    Bias.SetSize(6);
 
     StateTable.AddData(ForceTorque, "ForceTorque");
     StateTable.AddData(RawForceTorque, "RawForceTorque");
@@ -135,7 +134,7 @@ void mtsATINetFTSensor::GetReadings(void)
         for (int i = 0; i < 6; i++ ) {
             temp = ntohl(*(int32*)&(Data->Response)[12 + i * 4]);
             RawForceTorque[i]= (double)((double)temp/1000000);
-            ForceTorque[i] = RawForceTorque[i] - Bias[i];
+            ForceTorque[i] = RawForceTorque[i];
             ForceTorque.SetValid(true);
         }
     }
@@ -148,7 +147,6 @@ void mtsATINetFTSensor::GetReadings(void)
 
 void mtsATINetFTSensor::Rebias(void)
 {
-//    Bias.Assign(RawForceTorque);
     *(uint16*)&(Data->Request)[2] = htons(0x0042); /* per table 9.1 in Net F/T user manual. */
 
     // try to send, but timeout after 10 ms
@@ -160,6 +158,8 @@ void mtsATINetFTSensor::Rebias(void)
 
     EventTriggers.ErrorMsg(std::string("Sensor ReBiased"));
     CMN_LOG_CLASS_RUN_VERBOSE << "FT Sensor Rebiased " << std::endl;
+
+    *(uint16*)&(Data->Request)[2] = htons(ATI_COMMAND);
 }
 
 bool mtsATINetFTSensor::IsSaturated(void)

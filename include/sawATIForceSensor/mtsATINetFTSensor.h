@@ -33,7 +33,7 @@ class mtsATINetFTSensorData;
 
 class CISST_EXPORT mtsATINetFTSensor: public mtsTaskContinuous
 {
-    CMN_DECLARE_SERVICES(CMN_NO_DYNAMIC_CREATION, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
+    CMN_DECLARE_SERVICES(CMN_NO_DYNAMIC_CREATION, CMN_LOG_ALLOW_ALL);
 
 public:
     mtsATINetFTSensor(const std::string & componentName);
@@ -69,7 +69,6 @@ private:
     bool         IsConnected;
     mtsDoubleVec ForceTorque;
     mtsDoubleVec RawForceTorque;
-    mtsDoubleVec Bias;
 
     std::string  IP;
 

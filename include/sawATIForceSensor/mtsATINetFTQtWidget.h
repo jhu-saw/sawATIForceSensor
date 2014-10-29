@@ -29,6 +29,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <QPushButton>
 #include <QDoubleSpinBox>
 
+#include <sawATIForceSensor/qcustomplot.h>
 
 // Always include last
 #include <sawATIForceSensor/sawATIForceSensorQtExport.h>
@@ -36,7 +37,7 @@ http://www.cisst.org/cisst/license.txt.
 class CISST_EXPORT mtsATINetFTQtWidget: public QWidget, public mtsComponent
 {
     Q_OBJECT;
-    CMN_DECLARE_SERVICES(CMN_DYNAMIC_CREATION_ONEARG, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
+    CMN_DECLARE_SERVICES(CMN_DYNAMIC_CREATION_ONEARG, CMN_LOG_ALLOW_ALL);
 
 public:
     mtsATINetFTQtWidget(const std::string & componentName, double periodInSeconds = 50.0 * cmn_ms);
@@ -48,7 +49,8 @@ public:
 
 protected:
     virtual void closeEvent(QCloseEvent * event);
-
+    QCustomPlot* SetupRealTimePlot(const std::string XAxis, const std::string Yaxis);
+    void UpdateRealTimePlot(QCustomPlot* plot,double key, double value);
 private:
     //! setup TeleOperation controller GUI
     void setupUi(void);
@@ -82,6 +84,9 @@ private:
     QCheckBox * SimCheckBox;
     QPushButton * CloneFTButton;
     QLabel * ConnectionStatus;
+    QCustomPlot * SensorRTPlot;
+    QLabel * SensorRTPlotFPS;
+    double Time;
 
     // Timing
     mtsIntervalStatistics IntervalStatistics;

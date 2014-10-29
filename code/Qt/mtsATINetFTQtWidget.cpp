@@ -102,16 +102,30 @@ void mtsATINetFTQtWidget::setupUi()
 
     QVBoxLayout * spinBoxLayout = new QVBoxLayout;
     QHBoxLayout * rawValuesLayout = new QHBoxLayout;
+    QLabel * rawLabel = new QLabel("Raw FT");
+    rawValuesLayout->addWidget(rawLabel);
     QHBoxLayout * filterValuesLayout = new QHBoxLayout;
+    QLabel * filterLabel = new QLabel("Filter FT");
+    filterValuesLayout->addWidget(filterLabel);
     for (int i = 0; i < 6; ++i) {
         QFTRawSensorValues[i] = new QDoubleSpinBox;
         QFTRawSensorValues[i]->setReadOnly(true);
+        QFTRawSensorValues[i]->setDecimals(6);
+        QFTRawSensorValues[i]->setValue(0.0);
+        QFTRawSensorValues[i]->setSingleStep(0.10);
+        QFTRawSensorValues[i]->setMinimum(-100.0);
+        QFTRawSensorValues[i]->setMaximum(100.0);
         rawValuesLayout->addWidget(QFTRawSensorValues[i]);
 
         QFTFilteredSensorValues[i] = new QDoubleSpinBox;
         QFTFilteredSensorValues[i]->setReadOnly(true);
+        QFTFilteredSensorValues[i]->setDecimals(6);
+        QFTFilteredSensorValues[i]->setValue(0.0);
+        QFTFilteredSensorValues[i]->setSingleStep(0.10);
+        QFTFilteredSensorValues[i]->setMinimum(-100.0);
+        QFTFilteredSensorValues[i]->setMaximum(100.0);
         filterValuesLayout->addWidget(QFTFilteredSensorValues[i]);
-    }    
+    }
     spinBoxLayout->addLayout(rawValuesLayout);
     spinBoxLayout->addLayout(filterValuesLayout);
 
@@ -132,7 +146,6 @@ void mtsATINetFTQtWidget::setupUi()
     tab1Layout->addLayout(utilityLaylout);
     tab1Layout->addLayout(spinBoxLayout);
     tab1Layout->addLayout(buttonLayout);
-    tab1Layout->addStretch();
 
     QWidget * tab1 = new QWidget;
     tab1->setLayout(tab1Layout);
@@ -145,9 +158,22 @@ void mtsATINetFTQtWidget::setupUi()
     QWidget * tab2 = new QWidget;
     tab2->setLayout(tab2Layout);
 
+    // Tab 3
+    QWidget * tab3 = new QWidget;
+    QVBoxLayout * tab3Layout = new QVBoxLayout;
+    SensorRTPlotFPS = new QLabel("0 FPS");
+    SensorRTPlot = SetupRealTimePlot("Time", "Force");
+    SensorRTPlot->replot();
+
+    tab3Layout->addWidget(SensorRTPlot);
+//    tab3Layout->addWidget(SensorRTPlotFPS);
+
+    tab3->setLayout(tab3Layout);
+
     // Setup tab widget
     tabWidget->addTab(tab1, "Sensor Stats");
     tabWidget->addTab(tab2, "Intervel Stats");
+    tabWidget->addTab(tab3, "Graph plot");
     tabWidget->show();
 
     setWindowTitle("ATI Force Sensor(N, N-mm)");
@@ -157,6 +183,63 @@ void mtsATINetFTQtWidget::setupUi()
     connect(RebiasButton, SIGNAL(clicked()), this, SLOT(RebiasFTSensor()));
     connect(SimCheckBox, SIGNAL(clicked(bool)), this, SLOT(SimulateChecked(bool)));
     connect(CloneFTButton, SIGNAL(clicked()), this, SLOT(CloneFTSensor()));
+}
+
+QCustomPlot* mtsATINetFTQtWidget::SetupRealTimePlot(const std::string XAxis, const std::string Yaxis)
+{
+    QCustomPlot * plot = new QCustomPlot;
+    plot->addGraph();
+    plot->graph(0)->setPen(QPen(Qt::blue));
+    plot->graph(0)->setBrush(QBrush(QColor(240, 255, 200)));
+    plot->graph(0)->setAntialiasedFill(false);
+    plot->addGraph(); // blue dot
+    plot->graph(1)->setPen(QPen(Qt::blue));
+    plot->graph(1)->setLineStyle(QCPGraph::lsNone);
+    plot->graph(1)->setScatterStyle(QCPScatterStyle::ssDisc);
+
+    plot->xAxis->setLabel(XAxis.c_str());
+    plot->yAxis->setLabel(Yaxis.c_str());
+
+    plot->xAxis->setTickLabelType(QCPAxis::ltDateTime);
+    plot->xAxis->setDateTimeFormat("hh:mm:ss");
+    plot->xAxis->setAutoTickStep(false);
+    plot->xAxis->setTickStep(2);
+    plot->axisRect()->setupFullAxesBox();
+
+    // make left and bottom axes transfer their ranges to right and top axes:
+    connect(plot->xAxis, SIGNAL(rangeChanged(QCPRange)), plot->xAxis2, SLOT(setRange(QCPRange)));
+    connect(plot->yAxis, SIGNAL(rangeChanged(QCPRange)), plot->yAxis2, SLOT(setRange(QCPRange)));
+
+    return plot;
+}
+
+void mtsATINetFTQtWidget::UpdateRealTimePlot(QCustomPlot *plot, double key, double value)
+{
+    plot->graph(0)->addData(key, value);       // add data to lines:
+    plot->graph(1)->clearData();
+    plot->graph(1)->addData(key, value);       // set data of dots:
+    plot->graph(0)->removeDataBefore(key-10);    // remove data of lines that's outside visible range:
+    plot->graph(0)->rescaleValueAxis();         // rescale value (vertical) axis to fit the current data:
+
+    // make key axis range scroll with the data (at a constant range size of 10):
+    plot->xAxis->setRange(key+0.25, 10, Qt::AlignRight);
+    plot->replot();
+
+    // calculate frames per second:
+    static double lastFpsKey;
+    static int frameCount;
+    ++frameCount;
+
+    if (key-lastFpsKey > 2) // average fps over 2 seconds
+    {
+        SensorRTPlotFPS->setText(
+            QString("%1 FPS, Total Data points: %2")
+            .arg(frameCount/(key-lastFpsKey), 0, 'f', 0)
+            .arg(plot->graph(0)->data()->count())
+            );
+      lastFpsKey = key;
+      frameCount = 0;
+    }
 }
 
 void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
@@ -190,6 +273,14 @@ void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
             QFTFilteredSensorValues[i]->setValue(ForceSensor.FilteredFTReadings[i]);
         }
     }
+
+    // Uppdate the plot
+    double key = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
+    vctDoubleVec forceOnly(3,0.0);
+    forceOnly[0] = QFTRawSensorValues[0]->value();
+    forceOnly[1] = QFTRawSensorValues[1]->value();
+    forceOnly[2] = QFTRawSensorValues[2]->value();
+    UpdateRealTimePlot(SensorRTPlot, key, forceOnly.Norm());
 
     ForceSensor.GetPeriodStatistics(IntervalStatistics);
     QMIntervalStatistics->SetValue(IntervalStatistics);
