@@ -73,6 +73,7 @@ mtsATINetFTSensor::mtsATINetFTSensor(const std::string & componentName):
         interfaceProvided->AddCommandReadState(StateTable, StateTable.PeriodStats,
                                                "GetPeriodStatistics");
         interfaceProvided->AddCommandVoid(&mtsATINetFTSensor::Rebias, this, "Rebias");
+        interfaceProvided->AddCommandWrite(&mtsATINetFTSensor::SetFilter, this, "SetFilter", std::string(""));
         interfaceProvided->AddEventWrite(EventTriggers.ErrorMsg, "ErrorMsg", std::string(""));
     }
 }
@@ -96,6 +97,17 @@ void mtsATINetFTSensor::Configure(const std::string & filename)
 
 void mtsATINetFTSensor::Cleanup(void)
 {
+    *(uint16*)&(Data->Request)[0] = htons(0x1234);
+    *(uint16*)&(Data->Request)[2] = htons(0); /* Stop streaming */
+    *(uint32*)&(Data->Request)[4] = htonl(ATI_NUM_SAMPLES);
+
+    // try to send, but timeout after 10 ms
+    int result = Socket.Send((const char *)(Data->Request), 8, 10.0 * cmn_ms);
+    if (result == -1) {
+        CMN_LOG_CLASS_RUN_WARNING << "Cleanup: UDP send failed" << std::endl;
+        return;
+    }
+
     Socket.Close();
 }
 
@@ -130,18 +142,45 @@ void mtsATINetFTSensor::GetReadings(void)
         this->Data->RdtSequence = ntohl(*(uint32*)&(Data->Response)[0]);
         this->Data->FtSequence = ntohl(*(uint32*)&(Data->Response)[4]);
         this->Data->Status = ntohl(*(uint32*)&(Data->Response)[8]);
+//        std::cerr << "Status " << this->Data->Status;
         int temp;
         for (int i = 0; i < 6; i++ ) {
             temp = ntohl(*(int32*)&(Data->Response)[12 + i * 4]);
             RawForceTorque[i]= (double)((double)temp/1000000);
-            ForceTorque[i] = RawForceTorque[i];
+            ApplyFilter(RawForceTorque, ForceTorque, CurrentFilter);
+            RawForceTorque.SetValid(true);
             ForceTorque.SetValid(true);
         }
     }
     else {
         CMN_LOG_CLASS_RUN_ERROR << "GetReadings: UDP receive failed" << std::endl;
+        RawForceTorque.SetValid(false);
+        RawForceTorque.Zeros();
         ForceTorque.SetValid(false);
         ForceTorque.Zeros();
+    }
+}
+
+void mtsATINetFTSensor::ApplyFilter(const mtsDoubleVec & rawFT, mtsDoubleVec & filteredFT, const FilterType &filter)
+{
+    if(rawFT.size() != 6) {
+        CMN_LOG_CLASS_RUN_ERROR << "ApplyFilter: Size mismatch" << std::endl;
+        return;
+    }
+
+    if(filter == NO_FILTER) {
+        filteredFT = rawFT;
+    } else if(filter == BW_FILTER) {
+        filteredFT = rawFT;
+    }
+}
+
+void mtsATINetFTSensor::SetFilter(const std::string &filterName)
+{
+    if(filterName == "NoFilter") {
+        CurrentFilter == NO_FILTER;
+    } else if(filterName == "Butterworth") {
+        CurrentFilter = BW_FILTER;
     }
 }
 
@@ -152,7 +191,7 @@ void mtsATINetFTSensor::Rebias(void)
     // try to send, but timeout after 10 ms
     int result = Socket.Send((const char *)(Data->Request), 8, 10.0 * cmn_ms);
     if (result == -1) {
-        CMN_LOG_CLASS_RUN_WARNING << "GetReadings: UDP send failed" << std::endl;
+        CMN_LOG_CLASS_RUN_WARNING << "Rebias: UDP send failed" << std::endl;
         return;
     }
 

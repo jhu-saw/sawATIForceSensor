@@ -36,6 +36,12 @@ class CISST_EXPORT mtsATINetFTSensor: public mtsTaskContinuous
     CMN_DECLARE_SERVICES(CMN_NO_DYNAMIC_CREATION, CMN_LOG_ALLOW_ALL);
 
 public:
+
+    enum FilterType{
+        NO_FILTER = 0,
+        BW_FILTER = 1  // Butterworth Filter
+    };
+
     mtsATINetFTSensor(const std::string & componentName);
     ~mtsATINetFTSensor() {
         Socket.Close();
@@ -47,12 +53,14 @@ public:
     void CloseSocket(void);
     void SetIPAddress(const std::string & ip);
     void Configure(const std::string & filename);
+    void ApplyFilter(const mtsDoubleVec & rawFT, mtsDoubleVec & filteredFT, const FilterType & filter);
 
 protected:
     void ConnectToSocket(void);
     void GetReadings(void);
     void Rebias(void);
     bool IsSaturated(void);
+    void SetFilter(const std::string & filterName);
 
 private:
     // Configuration
@@ -73,6 +81,7 @@ private:
     std::string  IP;
 
     mtsATINetFTSensorData * Data;
+    FilterType CurrentFilter;
 };
 
 CMN_DECLARE_SERVICES_INSTANTIATION(mtsATINetFTSensor);
