@@ -83,6 +83,7 @@ private:
     QPushButton * RebiasButton;
     QCheckBox * SimCheckBox;
     QPushButton * CloneFTButton;
+    QPushButton * ZeroFTButton;
     QLabel * ConnectionStatus;
     QCustomPlot * SensorRTPlot;
     QLabel * SensorRTPlotFPS;
@@ -96,6 +97,7 @@ private slots:
     void timerEvent(QTimerEvent * event);
     void RebiasFTSensor(void);
     void CloneFTSensor(void);
+    void InitializeFTToZero(void);
     void SimulateChecked(bool);
 };
 

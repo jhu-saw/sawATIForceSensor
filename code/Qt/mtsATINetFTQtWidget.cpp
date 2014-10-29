@@ -132,8 +132,10 @@ void mtsATINetFTQtWidget::setupUi()
     QHBoxLayout * utilityLaylout = new QHBoxLayout;
     SimCheckBox = new QCheckBox("Simulate");
     CloneFTButton = new QPushButton("Clone");
+    ZeroFTButton = new QPushButton("Zero");
     utilityLaylout->addWidget(SimCheckBox);
     utilityLaylout->addWidget(CloneFTButton);
+    utilityLaylout->addWidget(ZeroFTButton);
     utilityLaylout->addItem(hSpacer);
 
     QHBoxLayout * buttonLayout = new QHBoxLayout;
@@ -183,6 +185,7 @@ void mtsATINetFTQtWidget::setupUi()
     connect(RebiasButton, SIGNAL(clicked()), this, SLOT(RebiasFTSensor()));
     connect(SimCheckBox, SIGNAL(clicked(bool)), this, SLOT(SimulateChecked(bool)));
     connect(CloneFTButton, SIGNAL(clicked()), this, SLOT(CloneFTSensor()));
+    connect(ZeroFTButton, SIGNAL(clicked()), this, SLOT(InitializeFTToZero()));
 }
 
 QCustomPlot* mtsATINetFTQtWidget::SetupRealTimePlot(const std::string XAxis, const std::string Yaxis)
@@ -302,6 +305,19 @@ void mtsATINetFTQtWidget::CloneFTSensor(void)
     } else {
         Simulated.RawFTReadings = ForceSensor.RawFTReadings;
         Simulated.FilteredFTReadings = ForceSensor.FilteredFTReadings;
+    }
+}
+
+void mtsATINetFTQtWidget::InitializeFTToZero()
+{
+    if(SimulateFT) {
+        for (int i = 0; i < 6; ++i) {
+            QFTRawSensorValues[i]->setValue(0.0);
+            QFTFilteredSensorValues[i]->setValue(0.0);
+        }
+    } else {
+        Simulated.RawFTReadings.Zeros();
+        Simulated.FilteredFTReadings.Zeros();
     }
 }
 
