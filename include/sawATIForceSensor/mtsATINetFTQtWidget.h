@@ -23,6 +23,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstMultiTask/mtsVector.h>
 #include <cisstMultiTask/mtsQtWidgetIntervalStatistics.h>
 #include <cisstParameterTypes/prmPositionCartesianGet.h>
+#include <cisstVector/vctQtWidgetDynamicVector.h>
 
 #include <QWidget>
 #include <QtGui>
@@ -60,30 +61,20 @@ protected:
     struct NetFTStruct {
         mtsFunctionVoid RebiasFTData;
         mtsFunctionRead GetFTData;
-        mtsFunctionRead GetRawFTData;
         mtsFunctionRead GetIsSaturated;
         mtsFunctionRead GetPeriodStatistics;
 
-        mtsDoubleVec RawFTReadings;
-        mtsDoubleVec FilteredFTReadings;
+        mtsDoubleVec FTReadings;
     } ForceSensor;
 
-    struct SimulatedFTStruct {
-        mtsDoubleVec RawFTReadings;
-        mtsDoubleVec FilteredFTReadings;
-    } Simulated;
 
 private:
 
-    bool SimulateFT;
-    mtsBool IsSaturated;
-    QDoubleSpinBox * QFTRawSensorValues[6];
-    QDoubleSpinBox * QFTFilteredSensorValues[6];
+    mtsBool IsSaturated;    
+//    QDoubleSpinBox * QFTSensorValues[6];
+    vctQtWidgetDynamicVectorDoubleRead * QFTSensorValues;
 
     QPushButton * RebiasButton;
-    QCheckBox * SimCheckBox;
-    QPushButton * CloneFTButton;
-    QPushButton * ZeroFTButton;
     QLabel * ConnectionStatus;
     QCustomPlot * SensorRTPlot;
     QLabel * SensorRTPlotFPS;
@@ -95,10 +86,7 @@ private:
 
 private slots:
     void timerEvent(QTimerEvent * event);
-    void RebiasFTSensor(void);
-    void CloneFTSensor(void);
-    void InitializeFTToZero(void);
-    void SimulateChecked(bool);
+    void RebiasFTSensor(void);    
 };
 
 CMN_DECLARE_SERVICES_INSTANTIATION(mtsATINetFTQtWidget);

@@ -35,16 +35,12 @@ CMN_IMPLEMENT_SERVICES_DERIVED_ONEARG(mtsATINetFTQtWidget, mtsComponent, std::st
 mtsATINetFTQtWidget::mtsATINetFTQtWidget(const std::string & componentName, double periodInSeconds):
     mtsComponent(componentName),
     TimerPeriodInMilliseconds(periodInSeconds * 1000) // Qt timers are in milliseconds
-{
-    SimulateFT = false;
-    Simulated.RawFTReadings.SetSize(6);
-    Simulated.FilteredFTReadings.SetSize(6);
+{    
     // Setup CISST Interface
     mtsInterfaceRequired * interfaceRequired;
     interfaceRequired = AddInterfaceRequired("RequiresATINetFTSensor");
     if(interfaceRequired) {
-        interfaceRequired->AddFunction("GetFTData", ForceSensor.GetFTData);
-        interfaceRequired->AddFunction("GetRawFTData", ForceSensor.GetRawFTData);
+        interfaceRequired->AddFunction("GetFTData", ForceSensor.GetFTData);        
         interfaceRequired->AddFunction("Rebias", ForceSensor.RebiasFTData);
         interfaceRequired->AddFunction("GetPeriodStatistics", ForceSensor.GetPeriodStatistics);
     }
@@ -95,59 +91,52 @@ void mtsATINetFTQtWidget::setupUi()
 
     // Tab 1
     QVBoxLayout * tab1Layout = new QVBoxLayout;
-    QLabel * instructionsLabel = new QLabel("This widget displays the force and torques values sensed by the ATI NetFT Sensor.\nUnits - Force(N), Torque(N-mm) \nValue in the brackets of each header displays the max F/T(-value,+value)");
+    QLabel * instructionsLabel = new QLabel("This widget displays the force and torques values sensed by the ATI NetFT Sensor.\nUnits - Force(N), Torque(N-mm) \nValue in the brackets of each header displays the max F/T(-value,+value)");    
 
-    QSpacerItem * vSpacer = new QSpacerItem(40, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
-    QSpacerItem * hSpacer = new QSpacerItem(10, 40, QSizePolicy::Expanding, QSizePolicy::Minimum);
+    QSpacerItem * vSpacer = new QSpacerItem(40, 10, QSizePolicy::Expanding, QSizePolicy::Preferred);
+    QSpacerItem * hSpacer = new QSpacerItem(10, 40, QSizePolicy::Expanding, QSizePolicy::Preferred);
 
     QVBoxLayout * spinBoxLayout = new QVBoxLayout;
-    QHBoxLayout * rawValuesLayout = new QHBoxLayout;
-    QLabel * rawLabel = new QLabel("Raw FT");
-    rawValuesLayout->addWidget(rawLabel);
-    QHBoxLayout * filterValuesLayout = new QHBoxLayout;
-    QLabel * filterLabel = new QLabel("Filter FT");
-    filterValuesLayout->addWidget(filterLabel);
-    for (int i = 0; i < 6; ++i) {
-        QFTRawSensorValues[i] = new QDoubleSpinBox;
-        QFTRawSensorValues[i]->setReadOnly(true);
-        QFTRawSensorValues[i]->setDecimals(6);
-        QFTRawSensorValues[i]->setValue(0.0);
-        QFTRawSensorValues[i]->setSingleStep(0.10);
-        QFTRawSensorValues[i]->setMinimum(-100.0);
-        QFTRawSensorValues[i]->setMaximum(100.0);
-        rawValuesLayout->addWidget(QFTRawSensorValues[i]);
+    QHBoxLayout * ftValuesLayout = new QHBoxLayout;
+    QLabel * ftLabel = new QLabel("Values");
+    ftValuesLayout->addWidget(ftLabel);
 
-        QFTFilteredSensorValues[i] = new QDoubleSpinBox;
-        QFTFilteredSensorValues[i]->setReadOnly(true);
-        QFTFilteredSensorValues[i]->setDecimals(6);
-        QFTFilteredSensorValues[i]->setValue(0.0);
-        QFTFilteredSensorValues[i]->setSingleStep(0.10);
-        QFTFilteredSensorValues[i]->setMinimum(-100.0);
-        QFTFilteredSensorValues[i]->setMaximum(100.0);
-        filterValuesLayout->addWidget(QFTFilteredSensorValues[i]);
-    }
-    spinBoxLayout->addLayout(rawValuesLayout);
-    spinBoxLayout->addLayout(filterValuesLayout);
+    QFTSensorValues = new vctQtWidgetDynamicVectorDoubleRead();
 
-    QHBoxLayout * utilityLaylout = new QHBoxLayout;
-    SimCheckBox = new QCheckBox("Simulate");
-    CloneFTButton = new QPushButton("Clone");
-    ZeroFTButton = new QPushButton("Zero");
-    utilityLaylout->addWidget(SimCheckBox);
-    utilityLaylout->addWidget(CloneFTButton);
-    utilityLaylout->addWidget(ZeroFTButton);
-    utilityLaylout->addItem(hSpacer);
+//    for (int i = 0; i < 6; ++i) {
+
+//        QFTSensorValues[i] = new QDoubleSpinBox;
+//        QFTSensorValues[i]->setReadOnly(true);
+//        QFTSensorValues[i]->setDecimals(6);
+//        QFTSensorValues[i]->setValue(0.0);
+//        QFTSensorValues[i]->setSingleStep(0.10);
+//        QFTSensorValues[i]->setMinimum(-100.0);
+//        QFTSensorValues[i]->setMaximum(100.0);
+//        ftValuesLayout->addWidget(QFTSensorValues[i]);
+//    }
+    ftValuesLayout->addWidget(QFTSensorValues);
+    spinBoxLayout->addLayout(ftValuesLayout);
 
     QHBoxLayout * buttonLayout = new QHBoxLayout;
     RebiasButton = new QPushButton("Rebias");
     buttonLayout->addWidget(RebiasButton);
     buttonLayout->addStretch();
 
+    QVBoxLayout * sensorPlotLayout = new QVBoxLayout;
+    SensorRTPlotFPS = new QLabel("0 FPS");
+    SensorRTPlot = SetupRealTimePlot("Time", "Force");        
+    SensorRTPlot->setFixedHeight(200);
+    SensorRTPlot->replot();    
+
+    sensorPlotLayout->addWidget(SensorRTPlot);
+    sensorPlotLayout->addWidget(SensorRTPlotFPS);
+
     // Tab1 layout order
     tab1Layout->addWidget(instructionsLabel);
-    tab1Layout->addLayout(utilityLaylout);
     tab1Layout->addLayout(spinBoxLayout);
+    tab1Layout->addLayout(sensorPlotLayout);
     tab1Layout->addLayout(buttonLayout);
+    tab1Layout->addSpacerItem(vSpacer);
 
     QWidget * tab1 = new QWidget;
     tab1->setLayout(tab1Layout);
@@ -156,36 +145,21 @@ void mtsATINetFTQtWidget::setupUi()
     QVBoxLayout * tab2Layout = new QVBoxLayout;
     QMIntervalStatistics = new mtsQtWidgetIntervalStatistics();
     tab2Layout->addWidget(QMIntervalStatistics);
+    tab2Layout->addStretch();
 
     QWidget * tab2 = new QWidget;
     tab2->setLayout(tab2Layout);
 
-    // Tab 3
-    QWidget * tab3 = new QWidget;
-    QVBoxLayout * tab3Layout = new QVBoxLayout;
-    SensorRTPlotFPS = new QLabel("0 FPS");
-    SensorRTPlot = SetupRealTimePlot("Time", "Force");
-    SensorRTPlot->replot();
-
-    tab3Layout->addWidget(SensorRTPlot);
-//    tab3Layout->addWidget(SensorRTPlotFPS);
-
-    tab3->setLayout(tab3Layout);
-
     // Setup tab widget
     tabWidget->addTab(tab1, "Sensor Stats");
     tabWidget->addTab(tab2, "Intervel Stats");
-    tabWidget->addTab(tab3, "Graph plot");
     tabWidget->show();
 
-    setWindowTitle("ATI Force Sensor(N, N-mm)");
+    setWindowTitle("ATI Force Sensor(N, N-mm)");    
     resize(sizeHint());
 
     // setup Qt Connection
-    connect(RebiasButton, SIGNAL(clicked()), this, SLOT(RebiasFTSensor()));
-    connect(SimCheckBox, SIGNAL(clicked(bool)), this, SLOT(SimulateChecked(bool)));
-    connect(CloneFTButton, SIGNAL(clicked()), this, SLOT(CloneFTSensor()));
-    connect(ZeroFTButton, SIGNAL(clicked()), this, SLOT(InitializeFTToZero()));
+    connect(RebiasButton, SIGNAL(clicked()), this, SLOT(RebiasFTSensor()));    
 }
 
 QCustomPlot* mtsATINetFTQtWidget::SetupRealTimePlot(const std::string XAxis, const std::string Yaxis)
@@ -236,9 +210,8 @@ void mtsATINetFTQtWidget::UpdateRealTimePlot(QCustomPlot *plot, double key, doub
     if (key-lastFpsKey > 2) // average fps over 2 seconds
     {
         SensorRTPlotFPS->setText(
-            QString("%1 FPS, Total Data points: %2")
-            .arg(frameCount/(key-lastFpsKey), 0, 'f', 0)
-            .arg(plot->graph(0)->data()->count())
+            QString("%1 FPS")
+            .arg(frameCount/(key-lastFpsKey), 0, 'f', 0)            
             );
       lastFpsKey = key;
       frameCount = 0;
@@ -251,38 +224,21 @@ void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
     if (this->isHidden()) {
         return;
     }
-
-    if(SimulateFT) {
-        for (int i = 0; i < 6; ++i) {
-            Simulated.RawFTReadings[i] = QFTRawSensorValues[i]->value();
-            Simulated.FilteredFTReadings[i] = QFTFilteredSensorValues[i]->value();
-        }
-    } else {
-        mtsExecutionResult executionResult;
-        executionResult = ForceSensor.GetFTData(ForceSensor.FilteredFTReadings);
-        if (!executionResult) {
-            CMN_LOG_CLASS_RUN_ERROR << "ForceSensor.GetFTData failed, \""
-                                    << executionResult << "\"" << std::endl;
-        }
-
-        executionResult = ForceSensor.GetRawFTData(ForceSensor.RawFTReadings);
-        if (!executionResult) {
-            CMN_LOG_CLASS_RUN_ERROR << "ForceSensor.GetFTData failed, \""
-                                    << executionResult << "\"" << std::endl;
-        }
-
-        for (int i = 0; i < 6; ++i) {
-            QFTRawSensorValues[i]->setValue(ForceSensor.RawFTReadings[i]);
-            QFTFilteredSensorValues[i]->setValue(ForceSensor.FilteredFTReadings[i]);
-        }
+    mtsExecutionResult executionResult;
+    executionResult = ForceSensor.GetFTData(ForceSensor.FTReadings);
+    if (!executionResult) {
+        CMN_LOG_CLASS_RUN_ERROR << "ForceSensor.GetFTData failed, \""
+                                << executionResult << "\"" << std::endl;
     }
+
+    QFTSensorValues->SetValue(ForceSensor.FTReadings);
 
     // Uppdate the plot
     double key = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
     vctDoubleVec forceOnly(3,0.0);
-    forceOnly[0] = QFTRawSensorValues[0]->value();
-    forceOnly[1] = QFTRawSensorValues[1]->value();
-    forceOnly[2] = QFTRawSensorValues[2]->value();
+    forceOnly[0] = QFTSensorValues->itemAt(0,0)->data(0).toReal();
+    forceOnly[1] = QFTSensorValues->itemAt(0,1)->data(0).toReal();
+    forceOnly[2] = QFTSensorValues->itemAt(0,2)->data(0).toReal();
     UpdateRealTimePlot(SensorRTPlot, key, forceOnly.Norm());
 
     ForceSensor.GetPeriodStatistics(IntervalStatistics);
@@ -294,51 +250,3 @@ void mtsATINetFTQtWidget::RebiasFTSensor(void)
     ForceSensor.RebiasFTData();
 }
 
-// Copy current snapshot of the force sensor state to the simulated state
-void mtsATINetFTQtWidget::CloneFTSensor(void)
-{
-    if(SimulateFT) {
-        for (int i = 0; i < 6; ++i) {
-            QFTRawSensorValues[i]->setValue(ForceSensor.RawFTReadings[i]);
-            QFTFilteredSensorValues[i]->setValue(ForceSensor.FilteredFTReadings[i]);
-        }
-    } else {
-        Simulated.RawFTReadings = ForceSensor.RawFTReadings;
-        Simulated.FilteredFTReadings = ForceSensor.FilteredFTReadings;
-    }
-}
-
-void mtsATINetFTQtWidget::InitializeFTToZero()
-{
-    if(SimulateFT) {
-        for (int i = 0; i < 6; ++i) {
-            QFTRawSensorValues[i]->setValue(0.0);
-            QFTFilteredSensorValues[i]->setValue(0.0);
-        }
-    } else {
-        Simulated.RawFTReadings.Zeros();
-        Simulated.FilteredFTReadings.Zeros();
-    }
-}
-
-void mtsATINetFTQtWidget::SimulateChecked(bool isClicked)
-{
-    SimulateFT  = isClicked;
-    for (int i = 0; i < 6; ++i) {
-        QFTRawSensorValues[i]->setReadOnly(!isClicked);
-        QFTFilteredSensorValues[i]->setReadOnly(!isClicked);
-    }
-
-    // Save previously set simulated values
-    if(!SimulateFT) {
-        for (int i = 0; i < 6; ++i) {
-            Simulated.RawFTReadings[i] = QFTRawSensorValues[i]->value();
-            Simulated.FilteredFTReadings[i] = QFTFilteredSensorValues[i]->value();
-        }
-    } else {
-        for (int i = 0; i < 6; ++i) {
-            QFTRawSensorValues[i]->setValue(Simulated.RawFTReadings[i]);
-            QFTFilteredSensorValues[i]->setValue(Simulated.FilteredFTReadings[i]);
-        }
-    }
-}

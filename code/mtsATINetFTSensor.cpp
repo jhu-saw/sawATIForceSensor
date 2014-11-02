@@ -58,17 +58,13 @@ mtsATINetFTSensor::mtsATINetFTSensor(const std::string & componentName):
 
     Data->Port = ATI_PORT;
 
-    ForceTorque.SetSize(6);
-    RawForceTorque.SetSize(6);
+    ForceTorque.SetSize(6);    
 
-    StateTable.AddData(ForceTorque, "ForceTorque");
-    StateTable.AddData(RawForceTorque, "RawForceTorque");
+    StateTable.AddData(ForceTorque, "ForceTorque");    
     StateTable.AddData(IsConnected, "IsConnected");
-
     mtsInterfaceProvided * interfaceProvided = AddInterfaceProvided("ProvidesATINetFTSensor");
     if (interfaceProvided) {
-        interfaceProvided->AddCommandReadState(StateTable, ForceTorque, "GetFTData");
-        interfaceProvided->AddCommandReadState(StateTable, RawForceTorque, "GetRawFTData");
+        interfaceProvided->AddCommandReadState(StateTable, ForceTorque, "GetFTData");        
         interfaceProvided->AddCommandReadState(StateTable, IsConnected, "GetSocketStatus");
         interfaceProvided->AddCommandReadState(StateTable, StateTable.PeriodStats,
                                                "GetPeriodStatistics");
@@ -138,24 +134,19 @@ void mtsATINetFTSensor::GetReadings(void)
 
     // if we were able to send we should now receive
     result = Socket.Receive((char *)(Data->Response), 36, 10.0 * cmn_ms);
-    if (result != -1) {
+    if (result > 0) {
         this->Data->RdtSequence = ntohl(*(uint32*)&(Data->Response)[0]);
         this->Data->FtSequence = ntohl(*(uint32*)&(Data->Response)[4]);
         this->Data->Status = ntohl(*(uint32*)&(Data->Response)[8]);
-//        std::cerr << "Status " << this->Data->Status;
         int temp;
         for (int i = 0; i < 6; i++ ) {
             temp = ntohl(*(int32*)&(Data->Response)[12 + i * 4]);
-            RawForceTorque[i]= (double)((double)temp/1000000);
-            ApplyFilter(RawForceTorque, ForceTorque, CurrentFilter);
-            RawForceTorque.SetValid(true);
+            ForceTorque[i]= (double)((double)temp/1000000);
             ForceTorque.SetValid(true);
         }
     }
     else {
-        CMN_LOG_CLASS_RUN_ERROR << "GetReadings: UDP receive failed" << std::endl;
-        RawForceTorque.SetValid(false);
-        RawForceTorque.Zeros();
+        CMN_LOG_CLASS_RUN_ERROR << "GetReadings: UDP receive failed" << std::endl;        
         ForceTorque.SetValid(false);
         ForceTorque.Zeros();
     }

@@ -75,8 +75,7 @@ private:
     // SOcket Information
     osaSocket Socket;
     bool         IsConnected;
-    mtsDoubleVec ForceTorque;
-    mtsDoubleVec RawForceTorque;
+    mtsDoubleVec ForceTorque;    
 
     std::string  IP;
 
