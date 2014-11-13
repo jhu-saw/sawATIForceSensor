@@ -117,7 +117,7 @@ void mtsATINetFTSensor::Run(void)
     ProcessQueuedCommands();
     GetReadings();
 
-    if (IsSaturated()) {
+    if (IsSaturated) {
         CMN_LOG_CLASS_RUN_WARNING << "Run: sensor saturated" << std::endl;
     }
 }
@@ -138,6 +138,9 @@ void mtsATINetFTSensor::GetReadings(void)
         this->Data->RdtSequence = ntohl(*(uint32*)&(Data->Response)[0]);
         this->Data->FtSequence = ntohl(*(uint32*)&(Data->Response)[4]);
         this->Data->Status = ntohl(*(uint32*)&(Data->Response)[8]);
+
+        CheckSaturation(this->Data->Status);
+//        std::cerr << "Status " << this->Data->Status << std::endl;
         int temp;
         for (int i = 0; i < 6; i++ ) {
             temp = ntohl(*(int32*)&(Data->Response)[12 + i * 4]);
@@ -146,7 +149,7 @@ void mtsATINetFTSensor::GetReadings(void)
         }
     }
     else {
-        CMN_LOG_CLASS_RUN_ERROR << "GetReadings: UDP receive failed" << std::endl;        
+//        CMN_LOG_CLASS_RUN_ERROR << "GetReadings: UDP receive failed" << std::endl;
         ForceTorque.SetValid(false);
         ForceTorque.Zeros();
     }
@@ -161,8 +164,6 @@ void mtsATINetFTSensor::ApplyFilter(const mtsDoubleVec & rawFT, mtsDoubleVec & f
 
     if(filter == NO_FILTER) {
         filteredFT = rawFT;
-    } else if(filter == BW_FILTER) {
-        filteredFT = rawFT;
     }
 }
 
@@ -170,8 +171,6 @@ void mtsATINetFTSensor::SetFilter(const std::string &filterName)
 {
     if(filterName == "NoFilter") {
         CurrentFilter == NO_FILTER;
-    } else if(filterName == "Butterworth") {
-        CurrentFilter = BW_FILTER;
     }
 }
 
@@ -192,8 +191,14 @@ void mtsATINetFTSensor::Rebias(void)
     *(uint16*)&(Data->Request)[2] = htons(ATI_COMMAND);
 }
 
-bool mtsATINetFTSensor::IsSaturated(void)
+bool mtsATINetFTSensor::CheckSaturation(const unsigned int status)
 {
+#if 1
+    if(status == ntohl(0x00020000))
+        IsSaturated = true;
+    else
+        IsSaturated = false;
+#else
     vct6 MaxLoads = NetFTConfig.NetFT.GenInfo.Ranges;
     Saturated = false;
     for (size_t i = 0; i < MaxLoads.size(); ++i) {
@@ -203,5 +208,6 @@ bool mtsATINetFTSensor::IsSaturated(void)
             Saturated = true;
         }
     }
-    return Saturated;
+#endif
+    return IsSaturated;
 }

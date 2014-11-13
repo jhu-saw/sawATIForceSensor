@@ -38,8 +38,7 @@ class CISST_EXPORT mtsATINetFTSensor: public mtsTaskContinuous
 public:
 
     enum FilterType{
-        NO_FILTER = 0,
-        BW_FILTER = 1  // Butterworth Filter
+        NO_FILTER = 0
     };
 
     mtsATINetFTSensor(const std::string & componentName);
@@ -59,13 +58,13 @@ protected:
     void ConnectToSocket(void);
     void GetReadings(void);
     void Rebias(void);
-    bool IsSaturated(void);
+    bool CheckSaturation(const unsigned int status);
     void SetFilter(const std::string & filterName);
 
 private:
     // Configuration
     mtsATINetFTConfig NetFTConfig;
-    bool Saturated;
+    bool IsSaturated;
 
     // Functions for events
     struct {

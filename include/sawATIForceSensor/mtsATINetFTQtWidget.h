@@ -24,13 +24,12 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstMultiTask/mtsQtWidgetIntervalStatistics.h>
 #include <cisstParameterTypes/prmPositionCartesianGet.h>
 #include <cisstVector/vctQtWidgetDynamicVector.h>
+#include <cisstVector/vctPlot2DOpenGLQtWidget.h>
 
 #include <QWidget>
 #include <QtGui>
 #include <QPushButton>
 #include <QDoubleSpinBox>
-
-#include <sawATIForceSensor/qcustomplot.h>
 
 // Always include last
 #include <sawATIForceSensor/sawATIForceSensorQtExport.h>
@@ -41,6 +40,13 @@ class CISST_EXPORT mtsATINetFTQtWidget: public QWidget, public mtsComponent
     CMN_DECLARE_SERVICES(CMN_DYNAMIC_CREATION_ONEARG, CMN_LOG_ALLOW_ALL);
 
 public:
+    enum {
+        Fx = 0,
+        Fy = 1,
+        Fz = 2,
+        FNorm = 3,
+        Fxyz = 4
+    };
     mtsATINetFTQtWidget(const std::string & componentName, double periodInSeconds = 50.0 * cmn_ms);
     ~mtsATINetFTQtWidget(){}
 
@@ -50,8 +56,6 @@ public:
 
 protected:
     virtual void closeEvent(QCloseEvent * event);
-    QCustomPlot* SetupRealTimePlot(const std::string XAxis, const std::string Yaxis);
-    void UpdateRealTimePlot(QCustomPlot* plot,double key, double value);
 private:
     //! setup TeleOperation controller GUI
     void setupUi(void);
@@ -70,15 +74,21 @@ protected:
 
 private:
 
-    mtsBool IsSaturated;    
-//    QDoubleSpinBox * QFTSensorValues[6];
+    mtsBool IsSaturated;
     vctQtWidgetDynamicVectorDoubleRead * QFTSensorValues;
 
     QPushButton * RebiasButton;
     QLabel * ConnectionStatus;
-    QCustomPlot * SensorRTPlot;
-    QLabel * SensorRTPlotFPS;
+
+    vctPlot2DOpenGLQtWidget * QFTPlot;
+    vctPlot2DBase::Signal * FTSignal[4];
+    vctPlot2DBase::Signal * TorqueSignal;
+
+    vctPlot2DBase::Scale * ForceScale;
+    vctPlot2DBase::Scale * TorqueScale;
+
     double Time;
+    int PlotIndex;
 
     // Timing
     mtsIntervalStatistics IntervalStatistics;
@@ -86,7 +96,8 @@ private:
 
 private slots:
     void timerEvent(QTimerEvent * event);
-    void RebiasFTSensor(void);    
+    void SlotRebiasFTSensor(void);
+    void SlotPlotIndex(int newAxis);
 };
 
 CMN_DECLARE_SERVICES_INSTANTIATION(mtsATINetFTQtWidget);
