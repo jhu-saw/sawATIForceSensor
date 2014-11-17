@@ -42,6 +42,7 @@ mtsATINetFTQtWidget::mtsATINetFTQtWidget(const std::string & componentName, doub
     interfaceRequired = AddInterfaceRequired("RequiresATINetFTSensor");
     if(interfaceRequired) {
         interfaceRequired->AddFunction("GetFTData", ForceSensor.GetFTData);
+//        interfaceRequired->AddFunction("GetFTData", ForceSensor.GetFTData);
         interfaceRequired->AddFunction("Rebias", ForceSensor.RebiasFTData);
         interfaceRequired->AddFunction("GetPeriodStatistics", ForceSensor.GetPeriodStatistics);
     }
@@ -90,13 +91,15 @@ void mtsATINetFTQtWidget::setupUi()
 
     QTabWidget * tabWidget = new QTabWidget;
 
-    // Tab 1
+    //--- Tab 1
     QVBoxLayout * tab1Layout = new QVBoxLayout;
     QLabel * instructionsLabel = new QLabel("This widget displays the force and torques values sensed by the ATI NetFT Sensor.\nUnits - Force(N), Torque(N-mm) \nValue in the brackets of each header displays the max F/T(-value,+value)");
 
+    // Spacers
     QSpacerItem * vSpacer = new QSpacerItem(40, 10, QSizePolicy::Expanding, QSizePolicy::Preferred);
     QSpacerItem * hSpacer = new QSpacerItem(10, 40, QSizePolicy::Expanding, QSizePolicy::Preferred);
 
+    // Force/Torque display widgets and layouts
     QVBoxLayout * spinBoxLayout = new QVBoxLayout;
     QHBoxLayout * ftValuesLayout = new QHBoxLayout;
     QLabel * ftLabel = new QLabel("Values");
@@ -108,19 +111,30 @@ void mtsATINetFTQtWidget::setupUi()
     ftValuesLayout->addWidget(QFTSensorValues);
     spinBoxLayout->addLayout(ftValuesLayout);
 
+    // Layout containing rebias button
     QHBoxLayout * buttonLayout = new QHBoxLayout;
     RebiasButton = new QPushButton("Rebias");
     buttonLayout->addWidget(RebiasButton);
     buttonLayout->addStretch();
 
-    QHBoxLayout * sensorPlotLayout = new QHBoxLayout;
-    QComboBox * QPlotItem = new QComboBox;
-    QPlotItem->addItem("Fx");
-    QPlotItem->addItem("Fy");
-    QPlotItem->addItem("Fz");
-    QPlotItem->addItem("FNorm");
-    QPlotItem->addItem("Fxyz");
+    // Combo box to select the plot item
+    QComboBox * QPlotSelectItem = new QComboBox;
+    QPlotSelectItem->addItem("Fx");
+    QPlotSelectItem->addItem("Fy");
+    QPlotSelectItem->addItem("Fz");
+    QPlotSelectItem->addItem("FNorm");
+    QPlotSelectItem->addItem("Fxyz");
 
+    // Upper and lower limits of the plot
+    QVBoxLayout * plotLabelLayout = new QVBoxLayout;
+    UpperLimit = new QLabel("U");
+    UpperLimit->setAlignment(Qt::AlignTop|Qt::AlignRight);
+    LowerLimit = new QLabel("L");
+    LowerLimit->setAlignment(Qt::AlignBottom | Qt::AlignRight);
+    plotLabelLayout->addWidget(UpperLimit);
+    plotLabelLayout->addWidget(LowerLimit);
+
+    // Plot to show force/torque graph
     QFTPlot = new vctPlot2DOpenGLQtWidget();
     QFTPlot->SetBackgroundColor(vct3(1.0, 1.0, 1.0));
     QFTPlot->resize(QFTPlot->sizeHint());
@@ -135,7 +149,10 @@ void mtsATINetFTQtWidget::setupUi()
     FTSignal[FNorm] = ForceScale->AddSignal("fnorm");
     FTSignal[FNorm]->SetColor(vctDouble3(0.0, 0.0, 0.0));
 
-    sensorPlotLayout->addWidget(QPlotItem);
+    // Add combo box, upper/lower limits labels and plot to a single layout
+    QHBoxLayout * sensorPlotLayout = new QHBoxLayout;
+    sensorPlotLayout->addWidget(QPlotSelectItem);
+    sensorPlotLayout->addLayout(plotLabelLayout);
     sensorPlotLayout->addWidget(QFTPlot);
 
     // Tab1 layout order
@@ -148,7 +165,7 @@ void mtsATINetFTQtWidget::setupUi()
     QWidget * tab1 = new QWidget;
     tab1->setLayout(tab1Layout);
 
-    // Tab 2
+    //--- Tab 2
     QVBoxLayout * tab2Layout = new QVBoxLayout;
     QMIntervalStatistics = new mtsQtWidgetIntervalStatistics();
     tab2Layout->addWidget(QMIntervalStatistics);
@@ -167,7 +184,7 @@ void mtsATINetFTQtWidget::setupUi()
 
     // setup Qt Connection
     connect(RebiasButton, SIGNAL(clicked()), this, SLOT(SlotRebiasFTSensor()));
-    connect(QPlotItem, SIGNAL(currentIndexChanged(int)), this, SLOT(SlotPlotIndex(int)));
+    connect(QPlotSelectItem, SIGNAL(currentIndexChanged(int)), this, SLOT(SlotPlotIndex(int)));
 }
 
 void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
@@ -205,6 +222,11 @@ void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
     else if(PlotIndex == FNorm)
         FTSignal[PlotIndex]->AppendPoint(vctDouble2(ForceSensor.FTReadings.Timestamp(),
                                                     forceOnly.Norm()));
+
+    // Update the lower/upper limits on the plot
+    vct2 range = ForceScale->GetViewingRangeY();
+    LowerLimit->setText(QString::number(range[0]));
+    UpperLimit->setText(QString::number(range[1]));
 
     QFTPlot->updateGL();
 }

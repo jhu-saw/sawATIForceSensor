@@ -71,7 +71,6 @@ protected:
         mtsDoubleVec FTReadings;
     } ForceSensor;
 
-
 private:
 
     mtsBool IsSaturated;
@@ -79,6 +78,9 @@ private:
 
     QPushButton * RebiasButton;
     QLabel * ConnectionStatus;
+
+    QLabel * UpperLimit;
+    QLabel * LowerLimit;
 
     vctPlot2DOpenGLQtWidget * QFTPlot;
     vctPlot2DBase::Signal * FTSignal[4];

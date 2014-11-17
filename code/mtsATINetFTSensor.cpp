@@ -58,13 +58,15 @@ mtsATINetFTSensor::mtsATINetFTSensor(const std::string & componentName):
 
     Data->Port = ATI_PORT;
 
-    ForceTorque.SetSize(6);    
+    FTData.SetSize(6);
 
-    StateTable.AddData(ForceTorque, "ForceTorque");    
+    StateTable.AddData(FTData, "FTData");
+    StateTable.AddData(ForceTorque, "ForceTorque");
     StateTable.AddData(IsConnected, "IsConnected");
     mtsInterfaceProvided * interfaceProvided = AddInterfaceProvided("ProvidesATINetFTSensor");
     if (interfaceProvided) {
-        interfaceProvided->AddCommandReadState(StateTable, ForceTorque, "GetFTData");        
+        interfaceProvided->AddCommandReadState(StateTable, FTData, "GetFTData");
+        interfaceProvided->AddCommandReadState(StateTable, ForceTorque, "GetForceTorque");
         interfaceProvided->AddCommandReadState(StateTable, IsConnected, "GetSocketStatus");
         interfaceProvided->AddCommandReadState(StateTable, StateTable.PeriodStats,
                                                "GetPeriodStatistics");
@@ -140,19 +142,21 @@ void mtsATINetFTSensor::GetReadings(void)
         this->Data->Status = ntohl(*(uint32*)&(Data->Response)[8]);
 
         CheckSaturation(this->Data->Status);
-//        std::cerr << "Status " << this->Data->Status << std::endl;
         int temp;
         for (int i = 0; i < 6; i++ ) {
             temp = ntohl(*(int32*)&(Data->Response)[12 + i * 4]);
-            ForceTorque[i]= (double)((double)temp/1000000);
-            ForceTorque.SetValid(true);
+            FTData[i]= (double)((double)temp/1000000);
+            FTData.Valid() = true;
         }
     }
     else {
 //        CMN_LOG_CLASS_RUN_ERROR << "GetReadings: UDP receive failed" << std::endl;
-        ForceTorque.SetValid(false);
-        ForceTorque.Zeros();
+        FTData.SetValid(false);
+        FTData.Zeros();
     }
+
+    ForceTorque.SetForce(FTData);
+    ForceTorque.Valid() = FTData.Valid();
 }
 
 void mtsATINetFTSensor::ApplyFilter(const mtsDoubleVec & rawFT, mtsDoubleVec & filteredFT, const FilterType &filter)

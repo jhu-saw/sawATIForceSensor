@@ -24,6 +24,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <sawTextToSpeech/mtsTextToSpeech.h>
 #include <sawATIForceSensor/mtsATINetFTSensor.h>
 #include <sawATIForceSensor/mtsATINetFTQtWidget.h>
+#include <cisstRobot/robHelper.h>
 
 int main(int argc, char ** argv)
 {

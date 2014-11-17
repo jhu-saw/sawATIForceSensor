@@ -22,6 +22,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstOSAbstraction/osaSocket.h>
 #include <cisstMultiTask/mtsTaskContinuous.h>
 #include <cisstMultiTask/mtsVector.h>
+#include <cisstParameterTypes/prmForceCartesianSet.h>
 
 #include <sawATIForceSensor/mtsATINetFTConfig.h>
 
@@ -74,7 +75,8 @@ private:
     // SOcket Information
     osaSocket Socket;
     bool         IsConnected;
-    mtsDoubleVec ForceTorque;    
+    mtsDoubleVec FTData;
+    prmForceCartesianSet ForceTorque;
 
     std::string  IP;
 
