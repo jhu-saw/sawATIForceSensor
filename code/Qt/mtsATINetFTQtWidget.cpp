@@ -185,6 +185,9 @@ void mtsATINetFTQtWidget::setupUi()
     // setup Qt Connection
     connect(RebiasButton, SIGNAL(clicked()), this, SLOT(SlotRebiasFTSensor()));
     connect(QPlotSelectItem, SIGNAL(currentIndexChanged(int)), this, SLOT(SlotPlotIndex(int)));
+
+    QPlotSelectItem->setCurrentIndex(0);
+    RebiasButton->animateClick();
 }
 
 void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
