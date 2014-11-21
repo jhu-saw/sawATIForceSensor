@@ -45,7 +45,8 @@ public:
         Fy = 1,
         Fz = 2,
         FNorm = 3,
-        Fxyz = 4
+        Fxyz = 4,
+        Txyz = 5
     };
     mtsATINetFTQtWidget(const std::string & componentName, double periodInSeconds = 50.0 * cmn_ms);
     ~mtsATINetFTQtWidget(){}
@@ -56,22 +57,20 @@ public:
 
 protected:
     virtual void closeEvent(QCloseEvent * event);
-private:
-    //! setup TeleOperation controller GUI
-    void setupUi(void);
-    int TimerPeriodInMilliseconds;
 
-protected:
+private:
+    void setupUi(void);
+    void SetupSensorPlot(void);
+
+private:
     struct NetFTStruct {
-        mtsFunctionVoid RebiasFTData;
+        mtsFunctionVoid RebiasForceTorque;
         mtsFunctionRead GetFTData;
         mtsFunctionRead GetIsSaturated;
         mtsFunctionRead GetPeriodStatistics;
 
         mtsDoubleVec FTReadings;
     } ForceSensor;
-
-private:
 
     mtsBool IsSaturated;
     vctQtWidgetDynamicVectorDoubleRead * QFTSensorValues;
@@ -83,14 +82,16 @@ private:
     QLabel * LowerLimit;
 
     vctPlot2DOpenGLQtWidget * QFTPlot;
-    vctPlot2DBase::Signal * FTSignal[4];
-    vctPlot2DBase::Signal * TorqueSignal;
+    vctPlot2DBase::Signal * ForceSignal[3];
+    vctPlot2DBase::Signal * FNormSignal;
+    vctPlot2DBase::Signal * TorqueSignal[3];
 
     vctPlot2DBase::Scale * ForceScale;
     vctPlot2DBase::Scale * TorqueScale;
 
     double Time;
     int PlotIndex;
+    int TimerPeriodInMilliseconds;
 
     // Timing
     mtsIntervalStatistics IntervalStatistics;

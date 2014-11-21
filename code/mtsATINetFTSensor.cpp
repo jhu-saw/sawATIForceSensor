@@ -197,21 +197,9 @@ void mtsATINetFTSensor::Rebias(void)
 
 bool mtsATINetFTSensor::CheckSaturation(const unsigned int status)
 {
-#if 1
     if(status == ntohl(0x00020000))
         IsSaturated = true;
     else
         IsSaturated = false;
-#else
-    vct6 MaxLoads = NetFTConfig.NetFT.GenInfo.Ranges;
-    Saturated = false;
-    for (size_t i = 0; i < MaxLoads.size(); ++i) {
-        if (((ForceTorque[i] > 0) && (ForceTorque[i] > MaxLoads[i])) ||
-            ((ForceTorque[i] < 0) && (ForceTorque[i] < -MaxLoads[i])) )  {
-            EventTriggers.ErrorMsg(std::string("Sensor Saturated"));
-            Saturated = true;
-        }
-    }
-#endif
     return IsSaturated;
 }
