@@ -166,7 +166,10 @@ void mtsATINetFTQtWidget::setupUi()
     // Setup tab widget
     tabWidget->addTab(tab1, "Sensor Stats");
     tabWidget->addTab(tab2, "Interval Stats");
-    tabWidget->show();
+
+    QHBoxLayout * mainLayout = new QHBoxLayout;
+    mainLayout->addWidget(tabWidget);
+    setLayout(mainLayout);
 
     setWindowTitle("ATI Force Sensor(N, N-mm)");
     resize(sizeHint());
