@@ -180,8 +180,7 @@ void mtsATINetFTSensor::GetReadingsFromCustomPort()
     int bytesRead;
     char buffer[512];
     double * packetReceived;
-    bytesRead = Socket.Receive(buffer, sizeof(buffer), 10.0* cmn_ms);
-    std::cerr << "Bytesread" << bytesRead << std::endl;
+    bytesRead = Socket.Receive(buffer, sizeof(buffer), 10.0* cmn_ms);    
     if (bytesRead  > 0) {
         if (bytesRead == 6 * sizeof(double)) {
             packetReceived = reinterpret_cast<double *>(buffer);
