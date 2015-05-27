@@ -52,12 +52,15 @@ public:
     void Cleanup(void);
     void CloseSocket(void);
     void SetIPAddress(const std::string & ip);
-    void Configure(const std::string & filename);
+    void Configure(const std::string & filename,
+                   bool useCustomPort = false,
+                   int customPortNumber = 0);
     void ApplyFilter(const mtsDoubleVec & rawFT, mtsDoubleVec & filteredFT, const FilterType & filter);
 
 protected:
     void ConnectToSocket(void);
     void GetReadings(void);
+    void GetReadingsFromCustomPort(void);
     void Rebias(void);
     bool CheckSaturation(const unsigned int status);
     void SetFilter(const std::string & filterName);
@@ -67,6 +70,10 @@ private:
     mtsATINetFTConfig NetFTConfig;
     bool IsSaturated;
 
+    int ATI_PORT;
+    int ATI_COMMAND;
+    int ATI_NUM_SAMPLES;
+
     // Functions for events
     struct {
         mtsFunctionWrite ErrorMsg;
@@ -74,7 +81,8 @@ private:
 
     // SOcket Information
     osaSocket Socket;
-    bool         IsConnected;
+    bool IsConnected;
+    bool UseCustomPort;
     mtsDoubleVec FTData;
     prmForceCartesianSet ForceTorque;
 

@@ -38,6 +38,7 @@ int main(int argc, char ** argv)
     std::string gcmip = "-1";
     std::string configFile;
     std::string ftip = "192.168.1.8";
+    int customPort = 0;
 
     options.AddOptionOneValue("c", "configuration",
                               "XML configuration file",
@@ -46,6 +47,10 @@ int main(int argc, char ** argv)
     options.AddOptionOneValue("i", "ftip",
                               "Force sensor IP address",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &ftip);
+
+    options.AddOptionOneValue("p", "customPort",
+                              "Custom Port Number",
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &customPort);
 
     options.AddOptionOneValue("g", "gcmip",
                               "global component manager IP address",
@@ -80,7 +85,11 @@ int main(int argc, char ** argv)
 
     mtsATINetFTSensor * forceSensor = new mtsATINetFTSensor("ForceSensor");       // Continuous
     forceSensor->SetIPAddress(ftip);      // IP address of the FT sensor
-    forceSensor->Configure(configFile);
+    if(customPort)
+        forceSensor->Configure(configFile, true, customPort);
+    else
+        forceSensor->Configure(configFile);
+
     componentManager->AddComponent(forceSensor);
 
     mtsATINetFTQtWidget * forceSensorGUI = new mtsATINetFTQtWidget("ATINetFTGUI");

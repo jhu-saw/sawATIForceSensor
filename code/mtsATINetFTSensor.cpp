@@ -23,10 +23,6 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <sawATIForceSensor/mtsATINetFTSensor.h>
 
-#define ATI_PORT 49152 /* Port the Net F/T always uses */
-#define ATI_COMMAND 2 /* Command code 2 starts streaming */
-#define ATI_NUM_SAMPLES 1 /* Will send 1 sample `before stopping */
-
 typedef unsigned int uint32;
 typedef int int32;
 typedef unsigned short uint16;
@@ -52,7 +48,10 @@ CMN_IMPLEMENT_SERVICES(mtsATINetFTSensor)
 
 mtsATINetFTSensor::mtsATINetFTSensor(const std::string & componentName):
     mtsTaskContinuous(componentName, 5000),
-    Socket(osaSocket::UDP)
+    Socket(osaSocket::UDP),
+    ATI_PORT(49152),                /* Port the Net F/T always uses */
+    ATI_COMMAND(2),                 /* Command code 2 starts streaming */
+    ATI_NUM_SAMPLES(1)              /* Will send 1 sample `before stopping */
 {
     Data = new mtsATINetFTSensorData;
 
@@ -78,15 +77,26 @@ mtsATINetFTSensor::mtsATINetFTSensor(const std::string & componentName):
 
 void mtsATINetFTSensor::Startup(void)
 {
-    *(uint16*)&(Data->Request)[0] = htons(0x1234); /* standard header. */
-    *(uint16*)&(Data->Request)[2] = htons(ATI_COMMAND); /* per table 9.1 in Net F/T user manual. */
-    *(uint32*)&(Data->Request)[4] = htonl(ATI_NUM_SAMPLES); /* see section 9.1 in Net F/T user manual. */
+    if(UseCustomPort) {
+        Socket.AssignPort(Data->Port);
+    } else {
+        *(uint16*)&(Data->Request)[0] = htons(0x1234); /* standard header. */
+        *(uint16*)&(Data->Request)[2] = htons(ATI_COMMAND); /* per table 9.1 in Net F/T user manual. */
+        *(uint32*)&(Data->Request)[4] = htonl(ATI_NUM_SAMPLES); /* see section 9.1 in Net F/T user manual. */
 
-    Socket.SetDestination(IP, Data->Port);
+        Socket.SetDestination(IP, Data->Port);
+    }
 }
 
-void mtsATINetFTSensor::Configure(const std::string & filename)
+void mtsATINetFTSensor::Configure(const std::string & filename,
+                                  bool useCustomPort,
+                                  int customPortNumber)
 {
+    UseCustomPort = useCustomPort;
+    if(UseCustomPort) {
+        Data->Port = customPortNumber;
+    }
+
     if (NetFTConfig.LoadCalibrationFile(filename)) {
         CMN_LOG_CLASS_RUN_WARNING << "Configure: file loaded - "
                                   << filename << std::endl;
@@ -95,17 +105,18 @@ void mtsATINetFTSensor::Configure(const std::string & filename)
 
 void mtsATINetFTSensor::Cleanup(void)
 {
-    *(uint16*)&(Data->Request)[0] = htons(0x1234);
-    *(uint16*)&(Data->Request)[2] = htons(0); /* Stop streaming */
-    *(uint32*)&(Data->Request)[4] = htonl(ATI_NUM_SAMPLES);
+    if(!UseCustomPort) {
+        *(uint16*)&(Data->Request)[0] = htons(0x1234);
+        *(uint16*)&(Data->Request)[2] = htons(0); /* Stop streaming */
+        *(uint32*)&(Data->Request)[4] = htonl(ATI_NUM_SAMPLES);
 
-    // try to send, but timeout after 10 ms
-    int result = Socket.Send((const char *)(Data->Request), 8, 10.0 * cmn_ms);
-    if (result == -1) {
-        CMN_LOG_CLASS_RUN_WARNING << "Cleanup: UDP send failed" << std::endl;
-        return;
+        // try to send, but timeout after 10 ms
+        int result = Socket.Send((const char *)(Data->Request), 8, 10.0 * cmn_ms);
+        if (result == -1) {
+            CMN_LOG_CLASS_RUN_WARNING << "Cleanup: UDP send failed" << std::endl;
+            return;
+        }
     }
-
     Socket.Close();
 }
 
@@ -117,7 +128,11 @@ void mtsATINetFTSensor::SetIPAddress(const std::string & ip)
 void mtsATINetFTSensor::Run(void)
 {
     ProcessQueuedCommands();
-    GetReadings();
+    if(UseCustomPort) {
+        GetReadingsFromCustomPort();
+    } else {
+        GetReadings();
+    }
 
     if (IsSaturated) {
         CMN_LOG_CLASS_RUN_WARNING << "Run: sensor saturated" << std::endl;
@@ -150,13 +165,40 @@ void mtsATINetFTSensor::GetReadings(void)
         }
     }
     else {
-//        CMN_LOG_CLASS_RUN_ERROR << "GetReadings: UDP receive failed" << std::endl;
         FTData.SetValid(false);
         FTData.Zeros();
     }
 
     ForceTorque.SetForce(FTData);
     ForceTorque.Valid() = FTData.Valid();
+}
+
+void mtsATINetFTSensor::GetReadingsFromCustomPort()
+{
+    // read force sensor data sending from xPC machine
+    // read UDP packets
+    int bytesRead;
+    char buffer[512];
+    double * packetReceived;
+    bytesRead = Socket.Receive(buffer, sizeof(buffer), 10.0* cmn_ms);
+    std::cerr << "Bytesread" << bytesRead << std::endl;
+    if (bytesRead  > 0) {
+        if (bytesRead == 6 * sizeof(double)) {
+            packetReceived = reinterpret_cast<double *>(buffer);
+            for (int i = 0; i < 6; i++ ) {
+                FTData[i] = packetReceived[i];
+                FTData.Valid() = true;
+            }
+            ForceTorque.SetForce(FTData);
+            ForceTorque.Valid() = FTData.Valid();
+        } else {
+            std::cerr << "!" << std::flush;
+        }
+    } else {
+        CMN_LOG_CLASS_RUN_ERROR << "GetReadings: UDP receive from xPC failed" << std::endl;
+        FTData.SetValid(false);
+        FTData.Zeros();
+    }
 }
 
 void mtsATINetFTSensor::ApplyFilter(const mtsDoubleVec & rawFT, mtsDoubleVec & filteredFT, const FilterType &filter)
@@ -180,19 +222,24 @@ void mtsATINetFTSensor::SetFilter(const std::string &filterName)
 
 void mtsATINetFTSensor::Rebias(void)
 {
-    *(uint16*)&(Data->Request)[2] = htons(0x0042); /* per table 9.1 in Net F/T user manual. */
+    if(UseCustomPort) {
 
-    // try to send, but timeout after 10 ms
-    int result = Socket.Send((const char *)(Data->Request), 8, 10.0 * cmn_ms);
-    if (result == -1) {
-        CMN_LOG_CLASS_RUN_WARNING << "Rebias: UDP send failed" << std::endl;
-        return;
+    } else {
+
+        *(uint16*)&(Data->Request)[2] = htons(0x0042); /* per table 9.1 in Net F/T user manual. */
+
+        // try to send, but timeout after 10 ms
+        int result = Socket.Send((const char *)(Data->Request), 8, 10.0 * cmn_ms);
+        if (result == -1) {
+            CMN_LOG_CLASS_RUN_WARNING << "Rebias: UDP send failed" << std::endl;
+            return;
+        }
+
+        EventTriggers.ErrorMsg(std::string("Sensor ReBiased"));
+        CMN_LOG_CLASS_RUN_VERBOSE << "FT Sensor Rebiased " << std::endl;
+
+        *(uint16*)&(Data->Request)[2] = htons(ATI_COMMAND);
     }
-
-    EventTriggers.ErrorMsg(std::string("Sensor ReBiased"));
-    CMN_LOG_CLASS_RUN_VERBOSE << "FT Sensor Rebiased " << std::endl;
-
-    *(uint16*)&(Data->Request)[2] = htons(ATI_COMMAND);
 }
 
 bool mtsATINetFTSensor::CheckSaturation(const unsigned int status)
