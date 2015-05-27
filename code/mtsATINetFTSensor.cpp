@@ -194,7 +194,7 @@ void mtsATINetFTSensor::GetReadingsFromCustomPort()
             std::cerr << "!" << std::flush;
         }
     } else {
-        CMN_LOG_CLASS_RUN_ERROR << "GetReadings: UDP receive from xPC failed" << std::endl;
+        CMN_LOG_CLASS_RUN_DEBUG << "GetReadings: UDP receive from xPC failed" << std::endl;
         FTData.SetValid(false);
         FTData.Zeros();
     }
