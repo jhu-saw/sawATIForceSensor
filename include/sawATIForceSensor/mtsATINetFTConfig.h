@@ -64,11 +64,9 @@ private:
         vct6 ScaleFactors16Bit;
     };
 
-public:
-    struct {
-        CalibrationInfo CalibInfo;
-        GeneralInfo GenInfo;
-    } NetFT;
+public:    
+    CalibrationInfo CalibInfo;
+    GeneralInfo GenInfo;
 
 };
 

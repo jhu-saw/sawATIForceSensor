@@ -51,11 +51,11 @@ bool mtsATINetFTConfig::ParseCalibrationFile(const std::string & calFile)
     std::string str;
 
     // Calibration info
-    if (!xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblNetFTCalibrationInfo", "SerialNumber", NetFT.CalibInfo.SerialNumber, "") ||
-        !xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblNetFTCalibrationInfo", "BodyStyle", NetFT.CalibInfo.BodyStyle, "") ||
-        !xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblNetFTCalibrationInfo", "CalibrationPartNumber", NetFT.CalibInfo.CalibrationPartNumber, "") ||
-        !xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblNetFTCalibrationInfo", "Family", NetFT.CalibInfo.Family, "") ||
-        !xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblNetFTCalibrationInfo", "CalibrationDate", NetFT.CalibInfo.CalibrationDate, "")
+    if (!xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblNetFTCalibrationInfo", "SerialNumber", CalibInfo.SerialNumber, "") ||
+        !xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblNetFTCalibrationInfo", "BodyStyle", CalibInfo.BodyStyle, "") ||
+        !xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblNetFTCalibrationInfo", "CalibrationPartNumber", CalibInfo.CalibrationPartNumber, "") ||
+        !xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblNetFTCalibrationInfo", "Family", CalibInfo.Family, "") ||
+        !xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblNetFTCalibrationInfo", "CalibrationDate", CalibInfo.CalibrationDate, "")
         ) {
             return false;
         }
@@ -64,12 +64,12 @@ bool mtsATINetFTConfig::ParseCalibrationFile(const std::string & calFile)
     if (!xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblNetFTCalibrationInfo", "GaugeOffsets", str, "")) {
         return false;
     }
-    NetFT.CalibInfo.GaugeOffsets.Assign(StrToVec(str, ' '));
+    CalibInfo.GaugeOffsets.Assign(StrToVec(str, ' '));
 
     if (!xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblNetFTCalibrationInfo", "CalibrationIndex", str, "")) {
         return false;
     }
-    NetFT.CalibInfo.CalibrationIndex.Assign(StrToVec(str, ' '));
+    CalibInfo.CalibrationIndex.Assign(StrToVec(str, ' '));
 
     // Calibration Matrix
     std::string Fx, Fy, Fz, Tx, Ty, Tz;
@@ -83,18 +83,18 @@ bool mtsATINetFTConfig::ParseCalibrationFile(const std::string & calFile)
             return false;
         }
 
-    NetFT.CalibInfo.Matrix.SetSize(6,6);
-    NetFT.CalibInfo.Matrix.Row(0) = vctDoubleVec(StrToVec(Fx, ' '));
-    NetFT.CalibInfo.Matrix.Row(1) = vctDoubleVec(StrToVec(Fy, ' '));
-    NetFT.CalibInfo.Matrix.Row(2) = vctDoubleVec(StrToVec(Fz, ' '));
-    NetFT.CalibInfo.Matrix.Row(3) = vctDoubleVec(StrToVec(Fx, ' '));
-    NetFT.CalibInfo.Matrix.Row(4) = vctDoubleVec(StrToVec(Fy, ' '));
-    NetFT.CalibInfo.Matrix.Row(5) = vctDoubleVec(StrToVec(Fz, ' '));
+    CalibInfo.Matrix.SetSize(6,6);
+    CalibInfo.Matrix.Row(0) = vctDoubleVec(StrToVec(Fx, ' '));
+    CalibInfo.Matrix.Row(1) = vctDoubleVec(StrToVec(Fy, ' '));
+    CalibInfo.Matrix.Row(2) = vctDoubleVec(StrToVec(Fz, ' '));
+    CalibInfo.Matrix.Row(3) = vctDoubleVec(StrToVec(Fx, ' '));
+    CalibInfo.Matrix.Row(4) = vctDoubleVec(StrToVec(Fy, ' '));
+    CalibInfo.Matrix.Row(5) = vctDoubleVec(StrToVec(Fz, ' '));
 
 
     // General info
-    if (!xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblCalibrationInformation", "ForceUnits", NetFT.GenInfo.ForceUnits, "") ||
-        !xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblCalibrationInformation", "TorqueUnits", NetFT.GenInfo.TorqueUnits, "")
+    if (!xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblCalibrationInformation", "ForceUnits", GenInfo.ForceUnits, "") ||
+        !xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblCalibrationInformation", "TorqueUnits", GenInfo.TorqueUnits, "")
         ) {
             return false;
         }
@@ -103,22 +103,22 @@ bool mtsATINetFTConfig::ParseCalibrationFile(const std::string & calFile)
     if (!xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblCalibrationInformation", "MaxRatings", str, "")) {
         return false;
     }
-    NetFT.GenInfo.MaxRatings.Assign(StrToVec(str, ' '));
+    GenInfo.MaxRatings.Assign(StrToVec(str, ' '));
 
     if (!xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblCalibrationInformation", "Resolutions", str, "")) {
         return false;
     }
-    NetFT.GenInfo.Resolutions.Assign(StrToVec(str, ' '));
+    GenInfo.Resolutions.Assign(StrToVec(str, ' '));
 
     if (!xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblCalibrationInformation", "Ranges", str, "")) {
         return false;
     }
-    NetFT.GenInfo.Ranges.Assign(StrToVec(str, ' '));
+    GenInfo.Ranges.Assign(StrToVec(str, ' '));
 
     if (!xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblCalibrationInformation", "_x0031_6BitScaleFactors", str, "")) {
         return false;
     }
-    NetFT.GenInfo.ScaleFactors16Bit.Assign(StrToVec(str, ' '));
+    GenInfo.ScaleFactors16Bit.Assign(StrToVec(str, ' '));
 
 
 
@@ -126,12 +126,12 @@ bool mtsATINetFTConfig::ParseCalibrationFile(const std::string & calFile)
     if (!xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblCalibrationInformation", "CountsPerForce", str, "")) {
         return false;
     }
-    NetFT.GenInfo.CountsPerForce = atof(str.c_str());
+    GenInfo.CountsPerForce = atof(str.c_str());
 
     if (!xmlPath.GetXMLValue("/dsNetFTCalibrationFile/tblCalibrationInformation", "CountsPerTorque", str, "")) {
         return false;
     }
-    NetFT.GenInfo.CountsPerTorque = atof(str.c_str());
+    GenInfo.CountsPerTorque = atof(str.c_str());
 
     return true;
 }

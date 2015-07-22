@@ -62,13 +62,17 @@ protected:
     void GetReadings(void);
     void GetReadingsFromCustomPort(void);
     void Rebias(void);
-    bool CheckSaturation(const unsigned int status);
+    void CheckSaturation(const unsigned int status);
     void SetFilter(const std::string & filterName);
+    void CheckForErrors(const unsigned int status);
 
 private:
     // Configuration
     mtsATINetFTConfig NetFTConfig;
+    bool IsRebiasRequested;
     bool IsSaturated;
+    bool HasError;
+    double PercentOfMax;
 
     int ATI_PORT;
     int ATI_COMMAND;
@@ -83,7 +87,9 @@ private:
     osaSocket Socket;
     bool IsConnected;
     bool UseCustomPort;
-    mtsDoubleVec FTData;
+    mtsDoubleVec FTRawData;
+    mtsDoubleVec FTBiasedData;
+    mtsDoubleVec FTBiasVec;
     prmForceCartesianSet ForceTorque;
 
     std::string  IP;
