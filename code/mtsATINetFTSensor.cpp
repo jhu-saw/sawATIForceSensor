@@ -47,11 +47,11 @@ public:
 CMN_IMPLEMENT_SERVICES(mtsATINetFTSensor)
 
 mtsATINetFTSensor::mtsATINetFTSensor(const std::string & componentName):
-    mtsTaskContinuous(componentName, 5000),
+mtsTaskContinuous(componentName, 5000),
     ATI_PORT(49152),                /* Port the Net F/T always uses */
     ATI_COMMAND(2),                 /* Command code 2 starts streaming */
     ATI_NUM_SAMPLES(1),              /* Will send 1 sample `before stopping */
-    Socket(osaSocket::UDP)
+Socket(osaSocket::UDP)
 {
     Data = new mtsATINetFTSensorData;
     IsSaturated = false;
@@ -75,7 +75,7 @@ mtsATINetFTSensor::mtsATINetFTSensor(const std::string & componentName):
         interfaceProvided->AddCommandReadState(StateTable, StateTable.PeriodStats, "GetPeriodStatistics");
         interfaceProvided->AddCommandReadState(StateTable, FTBiasedData, "GetFTData");
         interfaceProvided->AddCommandReadState(StateTable, ForceTorque, "GetForceTorque");
-        interfaceProvided->AddCommandReadState(StateTable, IsConnected, "GetSocketStatus");
+        interfaceProvided->AddCommandReadState(StateTable, IsConnected, "GetIsConnected");
         interfaceProvided->AddCommandReadState(StateTable, IsSaturated, "GetIsSaturated");
         interfaceProvided->AddCommandReadState(StateTable, PercentOfMax, "GetPercentOfMax");
         interfaceProvided->AddCommandReadState(StateTable, HasError, "GetHasError");
@@ -100,8 +100,8 @@ void mtsATINetFTSensor::Startup(void)
 }
 
 void mtsATINetFTSensor::Configure(const std::string & filename,
-                                  bool useCustomPort,
-                                  int customPortNumber)
+  bool useCustomPort,
+  int customPortNumber)
 {
     UseCustomPort = useCustomPort;
     if(UseCustomPort) {
@@ -110,7 +110,7 @@ void mtsATINetFTSensor::Configure(const std::string & filename,
 
     if (NetFTConfig.LoadCalibrationFile(filename)) {
         CMN_LOG_CLASS_RUN_WARNING << "Configure: file loaded - "
-                                  << filename << std::endl;
+        << filename << std::endl;
     }
 }
 
@@ -204,9 +204,10 @@ void mtsATINetFTSensor::GetReadingsFromCustomPort()
     char buffer[512];
     double *packetReceived;
     
-    bytesRead = Socket.Receive(buffer, 56, 40.0* cmn_ms);
+    bytesRead = Socket.Receive(buffer, 56, 100.0* cmn_ms);
     if (bytesRead  > 0) {
-        if (bytesRead == 7 * sizeof(double) ) {
+        IsConnected = true;
+        if (bytesRead == (6 * sizeof(double) + 2 * sizeof(int))) {
             packetReceived = reinterpret_cast<double *>(buffer);
             // Force-Torque values
             for (int i = 0; i < 6; i++ ) {
@@ -214,19 +215,26 @@ void mtsATINetFTSensor::GetReadingsFromCustomPort()
                 FTRawData.SetValid(true);
             }
 
-            // Error bit
-            double error = packetReceived[6];
+            // Error bits
+            int error = (int)buffer[48];
+            int saturated = (int)buffer[52];
+
             if( error == 1)
-                IsSaturated = true;
+                HasError = true;                            
             else
-                IsSaturated = false;
+                HasError = false;            
+
+            if( saturated == 1)
+                IsSaturated = true;                            
+            else
+                IsSaturated = false;            
 
         } else {
             std::cerr << "!" << std::flush;
         }
     } else {
         CMN_LOG_CLASS_RUN_DEBUG << "GetReadings: UDP receive from xPC failed" << std::endl;
-        IsConnected = false;
+        IsConnected = false;        
         FTRawData.SetValid(false);
         // FTRawData.Zeros();
     }

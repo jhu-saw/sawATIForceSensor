@@ -289,8 +289,8 @@ void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
     ForceSensor.GetIsConnected(ForceSensor.IsConnected);
     ForceSensor.GetIsSaturated(ForceSensor.IsSaturated);
     ForceSensor.GetHasError(ForceSensor.HasError);
-
-    if(ForceSensor.IsConnected) {
+ 
+    if(!ForceSensor.IsConnected) {
         ErrorMsg->setText(QString("Not Connected"));
         ErrorMsg->setStyleSheet("QLineEdit {background-color: red }");
     } else if (ForceSensor.HasError) {
@@ -300,7 +300,7 @@ void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
         ErrorMsg->setText(QString("Saturated"));
         ErrorMsg->setStyleSheet("QLineEdit {background-color: red }");
     } else {
-        ErrorMsg->setText(QString("No Error"));
+        ErrorMsg->setText(QString("Connected : No Error"));
         ErrorMsg->setStyleSheet("QLineEdit {background-color:green }");
     }
 
