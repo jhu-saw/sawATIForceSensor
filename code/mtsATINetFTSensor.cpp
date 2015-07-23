@@ -162,6 +162,7 @@ void mtsATINetFTSensor::GetReadings(void)
     // try to send, but timeout after 10 ms
     result = Socket.Send((const char *)(Data->Request), 8, 10.0 * cmn_ms);
     if (result == -1) {
+        IsConnected = false;
         CMN_LOG_CLASS_RUN_WARNING << "GetReadings: UDP send failed" << std::endl;
         return;
     }
@@ -169,6 +170,7 @@ void mtsATINetFTSensor::GetReadings(void)
     // if we were able to send we should now receive
     result = Socket.Receive((char *)(Data->Response), 36, 10.0 * cmn_ms);
     if (result > 0) {
+        IsConnected = true;
         this->Data->RdtSequence = ntohl(*(uint32*)&(Data->Response)[0]);
         this->Data->FtSequence = ntohl(*(uint32*)&(Data->Response)[4]);
         this->Data->Status = ntohl(*(uint32*)&(Data->Response)[8]);
@@ -184,8 +186,8 @@ void mtsATINetFTSensor::GetReadings(void)
         }
     }
     else {
-        FTRawData.SetValid(false);
-
+        IsConnected = false;
+        FTRawData.SetValid(false);        
         // If there are packets missing then the state table will not be updated;
         // when queried previous FT will be returned;
         // If you want FT to be zero, when a packet is missed, uncomment the below line
@@ -224,6 +226,7 @@ void mtsATINetFTSensor::GetReadingsFromCustomPort()
         }
     } else {
         CMN_LOG_CLASS_RUN_DEBUG << "GetReadings: UDP receive from xPC failed" << std::endl;
+        IsConnected = false;
         FTRawData.SetValid(false);
         // FTRawData.Zeros();
     }

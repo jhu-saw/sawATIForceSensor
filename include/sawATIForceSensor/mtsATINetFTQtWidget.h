@@ -65,11 +65,16 @@ private:
 private:
     struct NetFTStruct {
         mtsFunctionVoid RebiasForceTorque;
-        mtsFunctionRead GetFTData;
-        mtsFunctionRead GetIsSaturated;
+        mtsFunctionRead GetFTData;        
         mtsFunctionRead GetPeriodStatistics;
+        mtsFunctionRead GetIsConnected;
+        mtsFunctionRead GetIsSaturated;
+        mtsFunctionRead GetHasError;
 
         mtsDoubleVec FTReadings;
+        bool IsConnected;
+        bool IsSaturated;
+        bool HasError;
     } ForceSensor;
 
     mtsBool IsSaturated;
@@ -80,6 +85,8 @@ private:
 
     QLabel * UpperLimit;
     QLabel * LowerLimit;
+
+    QLineEdit * ErrorMsg;
 
     vctPlot2DOpenGLQtWidget * QFTPlot;
     vctPlot2DBase::Signal * ForceSignal[3];

@@ -41,10 +41,12 @@ mtsATINetFTQtWidget::mtsATINetFTQtWidget(const std::string & componentName, doub
     mtsInterfaceRequired * interfaceRequired;
     interfaceRequired = AddInterfaceRequired("RequiresATINetFTSensor");
     if(interfaceRequired) {
-        interfaceRequired->AddFunction("GetFTData", ForceSensor.GetFTData);
-        //        interfaceRequired->AddFunction("GetFTData", ForceSensor.GetFTData);
-        interfaceRequired->AddFunction("Rebias", ForceSensor.RebiasForceTorque);
+        interfaceRequired->AddFunction("GetFTData"          , ForceSensor.GetFTData);
+        interfaceRequired->AddFunction("Rebias"             , ForceSensor.RebiasForceTorque);
         interfaceRequired->AddFunction("GetPeriodStatistics", ForceSensor.GetPeriodStatistics);
+        interfaceRequired->AddFunction("GetIsConnected"     , ForceSensor.GetIsConnected);
+        interfaceRequired->AddFunction("GetIsSaturated"     , ForceSensor.GetIsSaturated);
+        interfaceRequired->AddFunction("GetHasError"        , ForceSensor.GetHasError);
     }
 
     setupUi();
@@ -109,13 +111,7 @@ void mtsATINetFTQtWidget::setupUi()
     QFTSensorValues->SetPrecision(4);
 
     ftValuesLayout->addWidget(QFTSensorValues);
-    spinBoxLayout->addLayout(ftValuesLayout);
-
-    // Layout containing rebias button
-    QHBoxLayout * buttonLayout = new QHBoxLayout;
-    RebiasButton = new QPushButton("Rebias");
-    buttonLayout->addWidget(RebiasButton);
-    buttonLayout->addStretch();
+    spinBoxLayout->addLayout(ftValuesLayout);  
 
     // Combo box to select the plot item
     QComboBox * QPlotSelectItem = new QComboBox;
@@ -144,10 +140,30 @@ void mtsATINetFTQtWidget::setupUi()
     sensorPlotLayout->addLayout(plotLabelLayout);
     sensorPlotLayout->addWidget(QFTPlot);
 
+    // Layout for Error Messages
+    QHBoxLayout * errorLayout = new QHBoxLayout;
+    QLabel *errorLabel = new QLabel("Info");
+
+    ErrorMsg = new QLineEdit("No Error");
+    ErrorMsg->setFont(QFont( "lucida", 12, QFont::Bold, TRUE ));
+    ErrorMsg->setStyleSheet("QLineEdit {background-color: green }");
+
+    errorLayout->addWidget(errorLabel);
+    errorLayout->addWidget(ErrorMsg);
+    errorLayout->addStretch();
+
+    // Layout containing rebias button
+    QHBoxLayout * buttonLayout = new QHBoxLayout;
+    RebiasButton = new QPushButton("Rebias");
+    buttonLayout->addWidget(RebiasButton);
+    buttonLayout->addStretch();
+
     // Tab1 layout order
     tab1Layout->addWidget(instructionsLabel);
     tab1Layout->addLayout(spinBoxLayout);
     tab1Layout->addLayout(sensorPlotLayout);
+    tab1Layout->addSpacerItem(vSpacer);
+    tab1Layout->addLayout(errorLayout);
     tab1Layout->addLayout(buttonLayout);
     tab1Layout->addSpacerItem(vSpacer);
 
@@ -268,6 +284,25 @@ void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
     LowerLimit->setText(text);
     text.setNum(range[1], 'f', 2);
     UpperLimit->setText(text);
+
+    // Update error state
+    ForceSensor.GetIsConnected(ForceSensor.IsConnected);
+    ForceSensor.GetIsSaturated(ForceSensor.IsSaturated);
+    ForceSensor.GetHasError(ForceSensor.HasError);
+
+    if(ForceSensor.IsConnected) {
+        ErrorMsg->setText(QString("Not Connected"));
+        ErrorMsg->setStyleSheet("QLineEdit {background-color: red }");
+    } else if (ForceSensor.HasError) {
+        ErrorMsg->setText(QString("Hardware Error"));
+        ErrorMsg->setStyleSheet("QLineEdit {background-color: red }");
+    } else if(ForceSensor.IsSaturated) {
+        ErrorMsg->setText(QString("Saturated"));
+        ErrorMsg->setStyleSheet("QLineEdit {background-color: red }");
+    } else {
+        ErrorMsg->setText(QString("No Error"));
+        ErrorMsg->setStyleSheet("QLineEdit {background-color:green }");
+    }
 
     QFTPlot->updateGL();
 }
