@@ -48,16 +48,17 @@ CMN_IMPLEMENT_SERVICES(mtsATINetFTSensor)
 
 mtsATINetFTSensor::mtsATINetFTSensor(const std::string & componentName):
     mtsTaskContinuous(componentName, 5000),
-    Socket(osaSocket::UDP),
     ATI_PORT(49152),                /* Port the Net F/T always uses */
     ATI_COMMAND(2),                 /* Command code 2 starts streaming */
-    ATI_NUM_SAMPLES(1)              /* Will send 1 sample `before stopping */
+    ATI_NUM_SAMPLES(1),              /* Will send 1 sample `before stopping */
+    Socket(osaSocket::UDP)
 {
     Data = new mtsATINetFTSensorData;
-
+    IsSaturated = false;
     Data->Port = ATI_PORT;
 
     FTRawData.SetSize(6);
+    FTRawData.Zeros();
     FTBiasedData.SetSize(6);
     FTBiasVec.SetSize(6);
     FTBiasVec.Zeros();
@@ -146,6 +147,7 @@ void mtsATINetFTSensor::Run(void)
 
     if (IsSaturated) {
         CMN_LOG_CLASS_RUN_WARNING << "Run: sensor saturated" << std::endl;
+        FTRawData.SetValid(false);
     }
 
     // Bias the FT data based on bias vec
@@ -178,7 +180,7 @@ void mtsATINetFTSensor::GetReadings(void)
         for (int i = 0; i < 6; i++ ) {
             temp = ntohl(*(int32*)&(Data->Response)[12 + i * 4]);
             FTRawData[i]= (double)((double)temp/1000000);
-            FTRawData.Valid() = true;
+            FTRawData.SetValid(true);
         }
     }
     else {
@@ -197,23 +199,25 @@ void mtsATINetFTSensor::GetReadingsFromCustomPort()
     // read force sensor data sending over a udp port
     // read UDP packets
     int bytesRead;
-    char buffer[7 * sizeof(double) + 1 * sizeof(int)];
-    bytesRead = Socket.Receive(buffer, sizeof(buffer), 10.0* cmn_ms);
+    char buffer[512];
+    double *packetReceived;
+    
+    bytesRead = Socket.Receive(buffer, 56, 40.0* cmn_ms);
     if (bytesRead  > 0) {
         if (bytesRead == 7 * sizeof(double) ) {
-
+            packetReceived = reinterpret_cast<double *>(buffer);
             // Force-Torque values
             for (int i = 0; i < 6; i++ ) {
-                FTRawData[i] = ntohl(*(double*)&buffer[0 + i * 8]);
-                FTRawData.Valid() = true;
+                FTRawData[i] = packetReceived[i];
+                FTRawData.SetValid(true);
             }
 
             // Error bit
-            int error = ntohl(*(int*)&(buffer)[6 * sizeof(double)]);
+            double error = packetReceived[6];
             if( error == 1)
-                HasError = true;
+                IsSaturated = true;
             else
-                HasError = false;
+                IsSaturated = false;
 
         } else {
             std::cerr << "!" << std::flush;
@@ -240,7 +244,7 @@ void mtsATINetFTSensor::ApplyFilter(const mtsDoubleVec & rawFT, mtsDoubleVec & f
 void mtsATINetFTSensor::SetFilter(const std::string &filterName)
 {
     if(filterName == "NoFilter") {
-        CurrentFilter == NO_FILTER;
+        CurrentFilter = NO_FILTER;
     }
 }
 
