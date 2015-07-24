@@ -25,6 +25,8 @@ http://www.cisst.org/cisst/license.txt.
 #include <QtGui>
 #include <QMessageBox>
 #include <QHeaderView>
+#include <QComboBox>
+#include <QLineEdit>
 
 // cisst
 #include <cisstMultiTask/mtsInterfaceRequired.h>
@@ -34,8 +36,8 @@ CMN_IMPLEMENT_SERVICES_DERIVED_ONEARG(mtsATINetFTQtWidget, mtsComponent, std::st
 
 mtsATINetFTQtWidget::mtsATINetFTQtWidget(const std::string & componentName, double periodInSeconds):
     mtsComponent(componentName),
-    TimerPeriodInMilliseconds(periodInSeconds), // Qt timers are in milliseconds
-    PlotIndex(0)
+    PlotIndex(0),
+    TimerPeriodInMilliseconds(periodInSeconds) // Qt timers are in milliseconds
 {
     // Setup CISST Interface
     mtsInterfaceRequired * interfaceRequired;
@@ -99,7 +101,7 @@ void mtsATINetFTQtWidget::setupUi()
 
     // Spacers
     QSpacerItem * vSpacer = new QSpacerItem(40, 10, QSizePolicy::Expanding, QSizePolicy::Preferred);
-    QSpacerItem * hSpacer = new QSpacerItem(10, 40, QSizePolicy::Expanding, QSizePolicy::Preferred);
+//    QSpacerItem * hSpacer = new QSpacerItem(10, 40, QSizePolicy::Expanding, QSizePolicy::Preferred);
 
     // Force/Torque display widgets and layouts
     QVBoxLayout * spinBoxLayout = new QVBoxLayout;
@@ -145,7 +147,7 @@ void mtsATINetFTQtWidget::setupUi()
     QLabel *errorLabel = new QLabel("Info");
 
     ErrorMsg = new QLineEdit("No Error");
-    ErrorMsg->setFont(QFont( "lucida", 12, QFont::Bold, TRUE ));
+    ErrorMsg->setFont(QFont("lucida", 12, QFont::Bold, true));
     ErrorMsg->setStyleSheet("QLineEdit {background-color: green }");
 
     errorLayout->addWidget(errorLabel);
