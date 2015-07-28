@@ -17,6 +17,7 @@ http://www.cisst.org/cisst/license.txt.
 
 */
 
+//#include <stdlib.h>
 #include <cisstCommon/cmnCommandLineOptions.h>
 #include <cisstMultiTask/mtsQtApplication.h>
 #include <cisstMultiTask/mtsCollectorState.h>
@@ -36,9 +37,10 @@ int main(int argc, char ** argv)
     // parse options
     cmnCommandLineOptions options;
     std::string gcmip = "-1";
-    std::string configFile;
+    std::string configFile = "";
     std::string ftip = "192.168.1.8";
     int customPort = 0;
+    double socketTimeout = 10 * cmn_ms;
 
     options.AddOptionOneValue("c", "configuration",
                               "XML configuration file",
@@ -52,11 +54,13 @@ int main(int argc, char ** argv)
                               "Custom Port Number",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &customPort);
 
+    options.AddOptionOneValue("t", "timeout",
+                              "Socket send/recieve timeout",
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &socketTimeout);
+
     options.AddOptionOneValue("g", "gcmip",
                               "global component manager IP address",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &gcmip);
-
-
 
     std::string errorMessage;
     if (!options.Parse(argc, argv, errorMessage)) {
@@ -86,9 +90,9 @@ int main(int argc, char ** argv)
     mtsATINetFTSensor * forceSensor = new mtsATINetFTSensor("ForceSensor");       // Continuous
     forceSensor->SetIPAddress(ftip);      // IP address of the FT sensor
     if(customPort)
-        forceSensor->Configure(configFile, true, customPort);
+        forceSensor->Configure(configFile, socketTimeout, customPort);
     else
-        forceSensor->Configure(configFile);
+        forceSensor->Configure(configFile, socketTimeout);
 
     componentManager->AddComponent(forceSensor);
 
@@ -100,30 +104,15 @@ int main(int argc, char ** argv)
     textToSpeech->SetPreemptive(true);
     componentManager->AddComponent(textToSpeech);
 
-//    mtsCollectorState *stateCollector = new mtsCollectorState(forceSensor->GetName(),
-//                                                              forceSensor->GetDefaultStateTableName(),
-//                                                              mtsCollectorBase::COLLECTOR_FILE_FORMAT_CSV);
-
-//    stateCollector->AddSignal("FTData");
-//    componentManager->AddComponent(stateCollector);
-//    stateCollector->UseSeparateLogFileDefault();
-//    stateCollector->Connect();
-
     componentManager->Connect(textToSpeech->GetName(), "ErrorMsg", "ForceSensor", "ProvidesATINetFTSensor");
 
     componentManager->Connect("ATINetFTGUI", "RequiresATINetFTSensor",
                               "ForceSensor", "ProvidesATINetFTSensor");
 
-    // create and start all tasks
-//    stateCollector->StartCollection(0.0);
-
     componentManager->CreateAll();
     componentManager->WaitForStateAll(mtsComponentState::READY);
     componentManager->StartAll();
     componentManager->WaitForStateAll(mtsComponentState::ACTIVE);
-
-    std::cerr << CMN_LOG_DETAILS << " to be removed" << std::endl;
-//    stateCollector->StopCollection(0.0);
 
     // kill all tasks and perform cleanup
     componentManager->KillAll();

@@ -53,7 +53,7 @@ public:
     void CloseSocket(void);
     void SetIPAddress(const std::string & ip);
     void Configure(const std::string & filename,
-                   bool useCustomPort = false,
+                   double timeout = 10.0 * cmn_ms,
                    int customPortNumber = 0);
     void ApplyFilter(const mtsDoubleVec & rawFT, mtsDoubleVec & filteredFT, const FilterType & filter);
 
@@ -87,6 +87,7 @@ private:
     osaSocket Socket;
     bool IsConnected;
     bool UseCustomPort;
+    double SocketTimeout;
     mtsDoubleVec FTRawData;
     mtsDoubleVec FTBiasedData;
     mtsDoubleVec FTBiasVec;
