@@ -37,7 +37,7 @@ CMN_IMPLEMENT_SERVICES_DERIVED_ONEARG(mtsATINetFTQtWidget, mtsComponent, std::st
 mtsATINetFTQtWidget::mtsATINetFTQtWidget(const std::string & componentName, double periodInSeconds):
     mtsComponent(componentName),
     PlotIndex(0),
-    TimerPeriodInMilliseconds(periodInSeconds) // Qt timers are in milliseconds
+    TimerPeriodInMilliseconds(periodInSeconds * 1000.0) // Qt timers are in milliseconds
 {
     // Setup CISST Interface
     mtsInterfaceRequired * interfaceRequired;
