@@ -63,12 +63,15 @@ mtsATINetFTSensor::mtsATINetFTSensor(const std::string & componentName):
     FTBiasVec.SetSize(6);
     FTBiasVec.Zeros();
 
+    PercentOfMaxVec.SetSize(6);
+    PercentOfMaxVec.Zeros();
+  
     StateTable.AddData(FTBiasedData , "FTData");
     StateTable.AddData(ForceTorque  , "ForceTorque");
     StateTable.AddData(IsConnected  , "IsConnected");
     StateTable.AddData(IsSaturated  , "IsSaturated");
     StateTable.AddData(HasError     , "HasError");
-    StateTable.AddData(PercentOfMax , "PercentOfMax");
+    StateTable.AddData(PercentOfMaxVec , "PercentOfMax");
 
     mtsInterfaceProvided * interfaceProvided = AddInterfaceProvided("ProvidesATINetFTSensor");
     if (interfaceProvided) {
@@ -77,7 +80,7 @@ mtsATINetFTSensor::mtsATINetFTSensor(const std::string & componentName):
         interfaceProvided->AddCommandReadState(StateTable, ForceTorque, "GetForceTorque");
         interfaceProvided->AddCommandReadState(StateTable, IsConnected, "GetIsConnected");
         interfaceProvided->AddCommandReadState(StateTable, IsSaturated, "GetIsSaturated");
-        interfaceProvided->AddCommandReadState(StateTable, PercentOfMax, "GetPercentOfMax");
+        interfaceProvided->AddCommandReadState(StateTable, PercentOfMaxVec, "GetPercentOfMax");
         interfaceProvided->AddCommandReadState(StateTable, HasError, "GetHasError");
 
         interfaceProvided->AddCommandVoid(&mtsATINetFTSensor::Rebias, this, "Rebias");
@@ -114,6 +117,8 @@ void mtsATINetFTSensor::Configure(const std::string & filename,
         CMN_LOG_CLASS_RUN_WARNING << "Configure: file loaded - "
                                   << filename << std::endl;
     }
+    CMN_LOG_CLASS_RUN_VERBOSE << "Force Ranges: " <<  NetFTConfig.GenInfo.MaxRatings << std::endl;
+  
 }
 
 void mtsATINetFTSensor::Cleanup(void)
@@ -147,15 +152,31 @@ void mtsATINetFTSensor::Run(void)
         GetReadings();
     }
 
-    if (IsSaturated) {
-        CMN_LOG_CLASS_RUN_WARNING << "Run: sensor saturated" << std::endl;
-        FTRawData.SetValid(false);
+    FTRawData.SetValid(true);
+  
+    if (!IsConnected){
+       FTRawData.SetValid(false);
     }
-
+    if (IsSaturated || HasError) {
+       CMN_LOG_CLASS_RUN_WARNING << "Run: sensor saturated or has error" << std::endl;
+       FTRawData.SetValid(false);
+    }
+  
     // Bias the FT data based on bias vec
     FTBiasedData = FTRawData - FTBiasVec;
     FTBiasedData.Valid() = FTRawData.Valid();
     ForceTorque.SetForce(FTBiasedData);
+  
+    // Update PercentOfMax, 0 if there is an error or is saturated
+    /// \note what about isConnected?
+    if (IsSaturated || HasError) {
+        PercentOfMaxVec.SetAll(100.0);
+    }
+    else
+    {
+        PercentOfMaxVec = (FTRawData.Abs().ElementwiseDivide(vctDoubleVec(NetFTConfig.GenInfo.MaxRatings))) * 100.0;
+    }
+  
 }
 
 void mtsATINetFTSensor::GetReadings(void)
@@ -184,12 +205,10 @@ void mtsATINetFTSensor::GetReadings(void)
         for (int i = 0; i < 6; i++ ) {
             temp = ntohl(*(int32*)&(Data->Response)[12 + i * 4]);
             FTRawData[i]= (double)((double)temp/1000000);
-            FTRawData.SetValid(true);
         }
     }
     else {
         IsConnected = false;
-        FTRawData.SetValid(false);
         // If there are packets missing then the state table will not be updated;
         // when queried previous FT will be returned;
         // If you want FT to be zero, when a packet is missed, uncomment the below line
@@ -214,7 +233,6 @@ void mtsATINetFTSensor::GetReadingsFromCustomPort()
             // Force-Torque values
             for (int i = 0; i < 6; i++ ) {
                 FTRawData[i] = packetReceived[i];
-                FTRawData.SetValid(true);
             }
 
             // Error bits
@@ -235,9 +253,8 @@ void mtsATINetFTSensor::GetReadingsFromCustomPort()
             std::cerr << "!" << std::flush;
         }
     } else {
-        CMN_LOG_CLASS_RUN_DEBUG << "GetReadings: UDP receive from xPC failed" << std::endl;
+        CMN_LOG_CLASS_RUN_WARNING << "GetReadings: UDP receive from xPC failed" << std::endl;
         IsConnected = false;
-        FTRawData.SetValid(false);
         // FTRawData.Zeros();
     }
 }
@@ -286,14 +303,4 @@ void mtsATINetFTSensor::CheckForErrors(const unsigned int status)
     else
         HasError = true;
 
-
-    // Update PercentOfMax
-    vctDoubleVec PercentOfMaxVec(6);
-    PercentOfMaxVec.Assign(FTRawData.Abs());
-
-    for (unsigned int i = 0; i < 6; i++)
-        PercentOfMaxVec[i] /= NetFTConfig.GenInfo.Ranges[i];
-
-    //save the largest value.
-    PercentOfMax = PercentOfMaxVec.MaxElement();
 }

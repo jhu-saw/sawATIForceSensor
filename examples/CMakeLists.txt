@@ -72,6 +72,21 @@ if (cisst_FOUND_AS_REQUIRED)
       cisst_target_link_libraries (sawATIForceSensorSimulator ${REQUIRED_CISST_LIBRARIES})
       set_property (TARGET sawATIForceSensorSimulator PROPERTY FOLDER "sawATIForceSensor")
 
+      add_executable(sawATIForceSensorWithSimulator
+                    mainForceWithSimulator.cpp
+                    )
+
+      # link against non cisst libraries and cisst components
+      target_link_libraries (sawATIForceSensorWithSimulator
+                            ${sawATIForceSensor_LIBRARIES}
+                            ${sawTextToSpeech_LIBRARIES}
+                            )
+
+      # link against cisst libraries (and dependencies)
+      cisst_target_link_libraries (sawATIForceSensorWithSimulator ${REQUIRED_CISST_LIBRARIES})
+      set_property (TARGET sawATIForceSensorWithSimulator PROPERTY FOLDER "sawATIForceSensor")
+
+
     endif (CISST_HAS_QT)
 
   endif (sawATIForceSensor_FOUND)

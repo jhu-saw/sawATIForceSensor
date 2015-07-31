@@ -72,7 +72,6 @@ private:
     bool IsRebiasRequested;
     bool IsSaturated;
     bool HasError;
-    double PercentOfMax;
 
     int ATI_PORT;
     int ATI_COMMAND;
@@ -91,6 +90,9 @@ private:
     mtsDoubleVec FTRawData;
     mtsDoubleVec FTBiasedData;
     mtsDoubleVec FTBiasVec;
+    /// force / max force for each axis. in 0-100.
+    mtsDoubleVec PercentOfMaxVec;
+  
     prmForceCartesianSet ForceTorque;
 
     std::string  IP;

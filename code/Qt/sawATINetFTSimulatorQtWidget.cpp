@@ -42,12 +42,6 @@ Port(port),
 Socket(osaSocket::UDP),
 UpdatePeriod(periodInSeconds)
 {
-  SpringK[0] = 1.0;
-  SpringK[1] = 1.0;
-  SpringK[2] = 1.0;
-  SpringK[3] = SpringK[0] * 10.0;
-  SpringK[4] = SpringK[1] * 10.0;
-  SpringK[5] = SpringK[2] * 10.0;
   
   //setup defaults.
   SetUpperLimits();
@@ -95,7 +89,9 @@ void sawATINetFTSimulatorQtWidget::setupUi()
   qFtlabels[5] = QString("tz");
   
   for (unsigned int i = 0; i < 6; ++i){
-    QString str = qFtlabels[i] + QString("[+") + QKeySequence(KeysPlus[i]).toString() + QString(":-") + QKeySequence(KeysMinus[i]).toString() + QString("]");
+    QString str = qFtlabels[i] + QString("[+") +
+                  QKeySequence(KeysPlus[i]).toString() +QString(":-") +
+                  QKeySequence(KeysMinus[i]).toString() + QString("]");
     str = str.toLower();
     
     QLabel * label = new QLabel(str, this);
@@ -103,20 +99,19 @@ void sawATINetFTSimulatorQtWidget::setupUi()
     
     labelsLayout->addWidget(label, 0, i);
   }
-  
-  QFTSensorValues = new vctQtWidgetDynamicVectorDoubleRead();
-  
-  QFTSensorValues->SetPrecision(4);
-  mainLayout->addWidget(QFTSensorValues);
+
+  QFTSensorValues = new vctQtWidgetDynamicVectorDoubleWrite(vctQtWidgetDynamicVectorDoubleWrite::SPINBOX_WIDGET);
+  QFTSensorValues->SetPrecision(2);
   vctDoubleVec ft;
   ft.SetSize(6);
   QFTSensorValues->SetValue(ft);
-  
+  // assigned after columns are established.
+  QFTSensorValues->SetRange(vctDoubleVec(LowerLimit), vctDoubleVec(UpperLimit));
+  mainLayout->addWidget(QFTSensorValues);
   
   // Layout containing rebias button
   QHBoxLayout * buttonLayout = new QHBoxLayout;
   buttonLayout->addStretch();
-  
   
   ConnectOnCheckBtn = new QCheckBox("ConnectOn", this);
   buttonLayout->addWidget(ConnectOnCheckBtn);
@@ -130,11 +125,18 @@ void sawATINetFTSimulatorQtWidget::setupUi()
   buttonLayout->addWidget(ErrorOnCheckBtn);
   ErrorOnCheckBtn->setChecked(false);
   
-  SpringOnCheckBtn = new QCheckBox("SpringOn", this);
+  SpringOnCheckBtn = new QCheckBox("SpringKOn", this);
   buttonLayout->addWidget(SpringOnCheckBtn);
   SpringOnCheckBtn->setChecked(true);
   
   mainLayout->addLayout(buttonLayout);
+  
+  SpringKSpinBox = new QDoubleSpinBox(this);
+  buttonLayout->addWidget(SpringKSpinBox);
+  SpringKSpinBox->setMinimum(0.1);
+  SpringKSpinBox->setMaximum(10000.0);
+  SpringKSpinBox->setValue(100.0);
+ 
   
   QString ipPort = QString ("Sending to: ") + QString::fromStdString(IP) + QString(':') + QString::number(Port);
   QLabel *ipLabel = new QLabel(ipPort, this);
@@ -156,12 +158,23 @@ void sawATINetFTSimulatorQtWidget::timerEvent(QTimerEvent * event){
   vctDoubleVec ft;
   ft.SetSize(6);
   
+  
+  /// Constant for spring
+  vct6 SpringK;
+  
+  SpringK[0] = SpringKSpinBox->value();
+  SpringK[1] = SpringKSpinBox->value();
+  SpringK[2] = SpringKSpinBox->value();
+  SpringK[3] = SpringK[0] * 10.0;
+  SpringK[4] = SpringK[1] * 10.0;
+  SpringK[5] = SpringK[2] * 10.0;
+  
   // go through each force reading and based on keyboard events increase/decrease up to a limit.
   // if not keyboard key pressed then go back to zero if (springON)
   for (unsigned int i = 0 ; i < 6; ++i) {
     //check if key down:
-    double k = SpringK[i] * UpdatePeriod * 20.0;
-    double kInput = SpringK[i] * UpdatePeriod * 10.0;
+    double k = SpringK[i] * UpdatePeriod * 2.0;
+    double kInput = SpringK[i] * UpdatePeriod * 1.0;
     
     
     if (IsKeyPlusDown[i]) {
@@ -191,9 +204,15 @@ void sawATINetFTSimulatorQtWidget::timerEvent(QTimerEvent * event){
         State.ForceTorque[i] = 0;
       }
     }
-    
+    else {  //otherwise get the double spin box input.
+      vctDoubleVec v(6);
+      QFTSensorValues->GetValue(v);
+      State.ForceTorque[i] = v[i];
+    }
     ft[i] = State.ForceTorque[i];
   }
+  
+  QFTSensorValues->SetValue(ft);
   
   //special events.
   if (SaturationOnCheckBtn->isChecked())
@@ -223,8 +242,6 @@ void sawATINetFTSimulatorQtWidget::timerEvent(QTimerEvent * event){
       return;
     }
   }
-  
-  QFTSensorValues->SetValue(ft);
   
   CMN_LOG_CLASS_RUN_DEBUG << GetStatus() << std::endl;
 }

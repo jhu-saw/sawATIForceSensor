@@ -55,7 +55,7 @@ int main(int argc, char ** argv)
                               cmnCommandLineOptions::OPTIONAL_OPTION, &customPort);
 
     options.AddOptionOneValue("t", "timeout",
-                              "Socket send/recieve timeout",
+                              "Socket send/receive timeout",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &socketTimeout);
 
     options.AddOptionOneValue("g", "gcmip",

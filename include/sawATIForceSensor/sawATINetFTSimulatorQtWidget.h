@@ -25,7 +25,7 @@
 
 #include <QWidget>
 #include <QCheckBox>
-
+#include <QDoubleSpinBox>
 #include <cisstOSAbstraction/osaSocket.h>
 
 
@@ -67,11 +67,9 @@ protected:
   QCheckBox  * SaturationOnCheckBtn;
   QCheckBox  * SpringOnCheckBtn;
   QCheckBox  * ErrorOnCheckBtn;
+  QDoubleSpinBox * SpringKSpinBox;
   
-  vctQtWidgetDynamicVectorDoubleRead * QFTSensorValues;
-  
-  /// Constant for spring
-  vct6 SpringK;
+  vctQtWidgetDynamicVectorDoubleWrite * QFTSensorValues;
 
   vct6 UpperLimit;
   vct6 LowerLimit;
