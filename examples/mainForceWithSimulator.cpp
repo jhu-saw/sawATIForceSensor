@@ -30,6 +30,31 @@
 #include <cisstOSAbstraction.h>
 #include <QApplication>
 
+
+
+#if (CISST_OS == CISST_DARWIN || CISST_OS == CISST_LINUX)
+#include  <sys/types.h>
+#include  <signal.h>
+#include  <sys/ipc.h>
+#include  <sys/shm.h>
+
+void SIGQUIT_Handler(int sig)
+{
+  signal(sig, SIG_IGN);
+  printf("From SIGQUIT: just got a %d (SIGQUIT ^\\) signal and is about to quit\n", sig);
+  QApplication::quit();
+  printf("Just called Quit\n");
+}
+
+void Register_SIGQUIT_Handler(void) {
+  
+  if (signal(SIGQUIT, SIGQUIT_Handler) == SIG_ERR) {
+    printf("SIGQUIT install error\n");
+    exit(2);
+  }
+}
+#endif
+
 //#define LOG_VERBOSE
 
 int main(int argc, char *argv[])
@@ -116,10 +141,7 @@ int main(int argc, char *argv[])
     return -1;
   }
   
-  QApplication application(argc, argv);
-  application.setStyle("Plastique");
-  
-  std::string processname = "ati-ft";
+    std::string processname = "ati-ft";
     mtsManagerLocal * componentManager = 0;
     if (gcmip != "-1") {
         try {
@@ -165,7 +187,11 @@ int main(int argc, char *argv[])
     atiSimulator->SetUpperLimits(limits[0],limits[1], limits[2], limits[3], limits[4], limits[5]);
     atiSimulator->SetLowerLimits(-limits[0],-limits[1], -limits[2], -limits[3], -limits[4], -limits[5]);
     atiSimulator->setupUi();
-
+  
+#if (CISST_OS == CISST_DARWIN || CISST_OS == CISST_LINUX)
+  Register_SIGQUIT_Handler();
+#endif
+  
     componentManager->CreateAll();
     componentManager->WaitForStateAll(mtsComponentState::READY);
     componentManager->StartAll();
@@ -173,14 +199,14 @@ int main(int argc, char *argv[])
 
     // kill all tasks and perform cleanup
     componentManager->KillAll();
-    componentManager->WaitForStateAll(mtsComponentState::FINISHED, 2.0 * cmn_s);
+    componentManager->WaitForStateAll(mtsComponentState::FINISHED, 5.0 * cmn_s);
     componentManager->Cleanup();
 
     delete forceSensor;
     delete atiSimulator;
-    delete forceSensorGUI;
+//    delete forceSensorGUI;  //removed because it is destroyed by internal qt mechanisms
     delete textToSpeech;
-//    delete qtAppTask;
+    delete qtAppTask;
 
     cmnLogger::Kill();
 
