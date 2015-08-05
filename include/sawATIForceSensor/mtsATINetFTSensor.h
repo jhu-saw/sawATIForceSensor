@@ -52,6 +52,9 @@ public:
     void Cleanup(void);
     void CloseSocket(void);
     void SetIPAddress(const std::string & ip);
+    void Configure(const std::string & filename) {
+      Configure(filename, 10.0 * cmn_ms, 0);
+    }
     void Configure(const std::string & filename,
                    double timeout = 10.0 * cmn_ms,
                    int customPortNumber = 0);
