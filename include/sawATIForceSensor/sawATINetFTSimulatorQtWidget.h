@@ -24,8 +24,10 @@
 #include <cisstVector/vctQtWidgetDynamicVector.h>
 
 #include <QWidget>
+#include <QEvent>
 #include <QCheckBox>
 #include <QDoubleSpinBox>
+#include <QPushButton>
 #include <cisstOSAbstraction/osaSocket.h>
 
 
@@ -49,14 +51,16 @@ public:
   void setupUi(void);
     
   std::string GetStatus();
+
   
 protected:
   virtual void closeEvent(QCloseEvent * event);
   virtual void keyPressEvent(QKeyEvent *event);
   virtual void keyReleaseEvent(QKeyEvent *event);
-   
+  virtual void focusOutEvent(QFocusEvent* event);
+  
   typedef struct {
-    double  ForceTorque[6];
+    vct6    ForceTorque;
     int     HasError;
     int     IsSaturated;
   } StateType;
@@ -68,6 +72,7 @@ protected:
   QCheckBox  * SpringOnCheckBtn;
   QCheckBox  * ErrorOnCheckBtn;
   QDoubleSpinBox * SpringKSpinBox;
+  QPushButton * ZeroBtn;
   
   vctQtWidgetDynamicVectorDoubleWrite * QFTSensorValues;
 
@@ -89,6 +94,7 @@ protected:
   
 private slots:
   void timerEvent(QTimerEvent * event);
+  void SlotZeroBtnClicked();
   
 };
 

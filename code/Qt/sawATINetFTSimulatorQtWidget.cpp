@@ -42,7 +42,6 @@ Port(port),
 Socket(osaSocket::UDP),
 UpdatePeriod(periodInSeconds)
 {
-  
   //setup defaults.
   SetUpperLimits();
   SetLowerLimits();
@@ -53,13 +52,12 @@ UpdatePeriod(periodInSeconds)
   IsKeyMinusDown.Zeros();
   IsKeyPlusDown.Zeros();
   
-  for (unsigned int i = 0 ; i < 6; ++i) {
-    State.ForceTorque[i] = 0;
-  }
+  State.ForceTorque.Zeros();
   
   State.HasError = 0;
   State.IsSaturated = 0;
   Socket.SetDestination(IP, Port);
+  this->installEventFilter(this);
 }
 
 sawATINetFTSimulatorQtWidget::~sawATINetFTSimulatorQtWidget(){
@@ -73,7 +71,9 @@ void sawATINetFTSimulatorQtWidget::setupUi()
   font.setBold(true);
   font.setPointSize(12);
   
-  setFocusPolicy(Qt::ClickFocus);
+//  setFocusPolicy(Qt::ClickFocus);
+  setFocusPolicy(Qt::StrongFocus);
+  
   
   QVBoxLayout * mainLayout = new QVBoxLayout;
   // Vectors of values
@@ -113,6 +113,11 @@ void sawATINetFTSimulatorQtWidget::setupUi()
   QHBoxLayout * buttonLayout = new QHBoxLayout;
   buttonLayout->addStretch();
   
+  ZeroBtn = new QPushButton("Zero",this);
+  buttonLayout->addWidget(ZeroBtn);
+  connect(ZeroBtn, SIGNAL(clicked()), this, SLOT(SlotZeroBtnClicked()));
+  
+  
   ConnectOnCheckBtn = new QCheckBox("ConnectOn", this);
   buttonLayout->addWidget(ConnectOnCheckBtn);
   ConnectOnCheckBtn->setChecked(true);
@@ -136,13 +141,13 @@ void sawATINetFTSimulatorQtWidget::setupUi()
   SpringKSpinBox->setMinimum(0.1);
   SpringKSpinBox->setMaximum(10000.0);
   SpringKSpinBox->setValue(100.0);
- 
+  SpringKSpinBox->setDecimals(1);
   
   QString ipPort = QString ("Sending to: ") + QString::fromStdString(IP) + QString(':') + QString::number(Port);
   QLabel *ipLabel = new QLabel(ipPort, this);
   
   mainLayout->addWidget(ipLabel);
-  
+
   setLayout(mainLayout);
   setWindowTitle("ATI NET FT Simulator");
   resize(sizeHint());
@@ -154,6 +159,8 @@ void sawATINetFTSimulatorQtWidget::setupUi()
 }
 
 void sawATINetFTSimulatorQtWidget::timerEvent(QTimerEvent * event){
+  
+  event->accept();
   
   vctDoubleVec ft;
   ft.SetSize(6);
@@ -309,5 +316,14 @@ std::string sawATINetFTSimulatorQtWidget::GetStatus() {
   
 }
 
+void sawATINetFTSimulatorQtWidget::SlotZeroBtnClicked(){
+  State.ForceTorque.Zeros();
+  QFTSensorValues->SetValue(vctDoubleVec(State.ForceTorque));
+}
 
+void sawATINetFTSimulatorQtWidget::focusOutEvent(QFocusEvent* event){
+  IsKeyPlusDown.Zeros();
+  IsKeyMinusDown.Zeros();
+  QWidget::focusOutEvent(event);
+}
 

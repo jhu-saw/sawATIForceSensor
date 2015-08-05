@@ -234,6 +234,8 @@ void mtsATINetFTQtWidget::SetupSensorPlot()
 
 void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
 {
+    event->accept();
+  
     // make sure we should update the display
     if (this->isHidden()) {
         return;
