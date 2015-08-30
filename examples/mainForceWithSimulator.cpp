@@ -141,52 +141,52 @@ int main(int argc, char *argv[])
     return -1;
   }
   
-    std::string processname = "ati-ft";
-    mtsManagerLocal * componentManager = 0;
-    if (gcmip != "-1") {
-        try {
-            componentManager = mtsManagerLocal::GetInstance(gcmip, processname);
-        } catch(...) {
-            std::cerr << "Failed to get GCM instance." << std::endl;
-            return -1;
-        }
-    } else {
-        componentManager = mtsManagerLocal::GetInstance();
-    }
+  std::string processname = "ati-ft";
+  mtsManagerLocal * componentManager = 0;
+  if (gcmip != "-1") {
+      try {
+          componentManager = mtsManagerLocal::GetInstance(gcmip, processname);
+      } catch(...) {
+          std::cerr << "Failed to get GCM instance." << std::endl;
+          return -1;
+      }
+  } else {
+      componentManager = mtsManagerLocal::GetInstance();
+  }
 
-    // create a Qt application and tab to hold all widgets
-    mtsQtApplication * qtAppTask = new mtsQtApplication("QtApplication", argc, argv);
-    qtAppTask->Configure();
-    componentManager->AddComponent(qtAppTask);
+  // create a Qt application and tab to hold all widgets
+  mtsQtApplication * qtAppTask = new mtsQtApplication("QtApplication", argc, argv);
+  qtAppTask->Configure();
+  componentManager->AddComponent(qtAppTask);
 
-    mtsATINetFTSensor * forceSensor = new mtsATINetFTSensor("ForceSensor");       // Continuous
-    forceSensor->SetIPAddress(serverIP);      // IP address of the FT sensor
-    if(serverPort)
-        forceSensor->Configure(configFile, socketTimeout, serverPort);
-    else
-        forceSensor->Configure(configFile, socketTimeout);
+  mtsATINetFTSensor * forceSensor = new mtsATINetFTSensor("ForceSensor");       // Continuous
+  forceSensor->SetIPAddress(serverIP);      // IP address of the FT sensor
+  if(serverPort)
+      forceSensor->Configure(configFile, socketTimeout, serverPort);
+  else
+      forceSensor->Configure(configFile, socketTimeout);
 
-    componentManager->AddComponent(forceSensor);
+  componentManager->AddComponent(forceSensor);
 
-    mtsATINetFTQtWidget * forceSensorGUI = new mtsATINetFTQtWidget("ATINetFTGUI");
-    componentManager->AddComponent(forceSensorGUI);
+  mtsATINetFTQtWidget * forceSensorGUI = new mtsATINetFTQtWidget("ATINetFTGUI");
+  componentManager->AddComponent(forceSensorGUI);
 
-    mtsTextToSpeech * textToSpeech = new mtsTextToSpeech;
-    textToSpeech->AddInterfaceRequiredForEventString("ErrorMsg", "ErrorMsg");
-    textToSpeech->SetPreemptive(true);
-    componentManager->AddComponent(textToSpeech);
+  mtsTextToSpeech * textToSpeech = new mtsTextToSpeech;
+  textToSpeech->AddInterfaceRequiredForEventString("ErrorMsg", "ErrorMsg");
+  textToSpeech->SetPreemptive(true);
+  componentManager->AddComponent(textToSpeech);
 
-    componentManager->Connect(textToSpeech->GetName(), "ErrorMsg", "ForceSensor", "ProvidesATINetFTSensor");
+  componentManager->Connect(textToSpeech->GetName(), "ErrorMsg", "ForceSensor", "ProvidesATINetFTSensor");
 
-    componentManager->Connect("ATINetFTGUI", "RequiresATINetFTSensor",
-                              "ForceSensor", "ProvidesATINetFTSensor");
+  componentManager->Connect("ATINetFTGUI", "RequiresATINetFTSensor",
+                            "ForceSensor", "ProvidesATINetFTSensor");
 
 
-    //the name by which this task can be found, set the actuator number to 2
-    sawATINetFTSimulatorQtWidget      *atiSimulator  = new sawATINetFTSimulatorQtWidget(1 * cmn_ms, serverIP, serverPort);
-    atiSimulator->SetUpperLimits(limits[0],limits[1], limits[2], limits[3], limits[4], limits[5]);
-    atiSimulator->SetLowerLimits(-limits[0],-limits[1], -limits[2], -limits[3], -limits[4], -limits[5]);
-    atiSimulator->setupUi();
+  //the name by which this task can be found, set the actuator number to 2
+  sawATINetFTSimulatorQtWidget      *atiSimulator  = new sawATINetFTSimulatorQtWidget(1 * cmn_ms, serverIP, serverPort);
+  atiSimulator->SetUpperLimits(limits[0],limits[1], limits[2], limits[3], limits[4], limits[5]);
+  atiSimulator->SetLowerLimits(-limits[0],-limits[1], -limits[2], -limits[3], -limits[4], -limits[5]);
+  componentManager->AddComponent(atiSimulator);
   
 #if (CISST_OS == CISST_DARWIN || CISST_OS == CISST_LINUX)
   Register_SIGQUIT_Handler();
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
     componentManager->Cleanup();
 
     delete forceSensor;
-    delete atiSimulator;
+  //  delete atiSimulator; //removed because it is destroyed by internal qt mechanisms?
 //    delete forceSensorGUI;  //removed because it is destroyed by internal qt mechanisms
     delete textToSpeech;
     delete qtAppTask;

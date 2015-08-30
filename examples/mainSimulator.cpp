@@ -22,7 +22,9 @@
 
 #include <cisstCommon.h>
 #include <cisstOSAbstraction.h>
-#include <QApplication>
+#include <cisstMultiTask/mtsQtApplication.h>
+#include <cisstMultiTask/mtsCollectorState.h>
+
 #include <cisstCommon/cmnCommandLineOptions.h>
 
 //#define LOG_VERBOSE
@@ -40,15 +42,7 @@ int main(int argc, char *argv[])
   cmnLogger::SetMaskClass("sawATINetFTSimulatorQtWidget", CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
  
 #endif
-  
-  
-  cmnLogger::SetMask(CMN_LOG_ALLOW_ALL);
-  cmnLogger::SetMaskDefaultLog(CMN_LOG_ALLOW_ALL);
-  cmnLogger::SetMaskClass("sawATINetFTSimulatorQtWidget", CMN_LOG_LOD_RUN_VERBOSE);
-  cmnLogger::SetMaskFunction(CMN_LOG_ALLOW_ALL);
-  cmnLogger::AddChannel(std::cerr, CMN_LOG_LOD_RUN_VERBOSE);
-  cmnLogger::AddChannel(std::cout, CMN_LOG_LOD_RUN_VERBOSE);
-  
+
   
   // parse options
   cmnCommandLineOptions options;
@@ -97,21 +91,46 @@ int main(int argc, char *argv[])
     return -1;
   }
   
-  QApplication application(argc, argv);
-  application.setStyle("Plastique");
+
+  std::string processname = "ati-ft-sim";
+  mtsManagerLocal * componentManager = 0;
+
+  try {
+      componentManager = mtsManagerLocal::GetInstance();
+  } catch(...) {
+      std::cerr << "Failed to get GCM instance." << std::endl;
+      return -1;
+  }
+
+  // create a Qt application and tab to hold all widgets
+  mtsQtApplication * qtAppTask = new mtsQtApplication("QtApplication", argc, argv);
+  qtAppTask->Configure();
+  componentManager->AddComponent(qtAppTask);
+
+  // QApplication application(argc, argv);
+  // application.setStyle("Plastique");
   
   //the name by which this task can be found, set the actuator number to 2
   sawATINetFTSimulatorQtWidget      *atiSimulator  = new sawATINetFTSimulatorQtWidget(1 * cmn_ms, serverIP, serverPort);
-  
-  
   atiSimulator->SetUpperLimits(limits[0],limits[1], limits[2], limits[3], limits[4], limits[5]);
   atiSimulator->SetLowerLimits(-limits[0],-limits[1], -limits[2], -limits[3], -limits[4], -limits[5]);
   
-  atiSimulator->setupUi();
   
-  application.exec();
-  
+  componentManager->AddComponent(atiSimulator);
+
+  componentManager->CreateAll();
+  componentManager->WaitForStateAll(mtsComponentState::READY);
+  componentManager->StartAll();
+  componentManager->WaitForStateAll(mtsComponentState::ACTIVE);
+
+  // kill all tasks and perform cleanup
+  componentManager->KillAll();
+  componentManager->WaitForStateAll(mtsComponentState::FINISHED, 5.0 * cmn_s);
+  componentManager->Cleanup();
+  delete qtAppTask; 
+
+  cmnLogger::Kill();
   std::cout << "Quitting." << std::endl;
-  
+
   return 0;
 }

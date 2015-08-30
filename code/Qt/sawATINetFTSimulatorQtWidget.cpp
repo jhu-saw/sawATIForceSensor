@@ -36,7 +36,7 @@
 CMN_IMPLEMENT_SERVICES(sawATINetFTSimulatorQtWidget);
 
 sawATINetFTSimulatorQtWidget::sawATINetFTSimulatorQtWidget(double periodInSeconds, std::string ip, int port):
-cmnGenericObject(),
+mtsComponent("sawATINetFTSimulatorQtWidget"),
 IP(ip),
 Port(port),
 Socket(osaSocket::UDP),
@@ -65,8 +65,11 @@ sawATINetFTSimulatorQtWidget::~sawATINetFTSimulatorQtWidget(){
   Socket.Close();
 }
 
-void sawATINetFTSimulatorQtWidget::setupUi()
-{
+void sawATINetFTSimulatorQtWidget::Configure(const std::string & filename){
+  CMN_LOG_CLASS_INIT_WARNING << "Configure not implemented yet:" << filename << std::endl;
+}
+
+void sawATINetFTSimulatorQtWidget::Startup(void) {
   QFont font;
   font.setBold(true);
   font.setPointSize(12);
@@ -155,7 +158,12 @@ void sawATINetFTSimulatorQtWidget::setupUi()
   
   this->show();
   startTimer(UpdatePeriod * 1000);
+
+
+}
   
+void sawATINetFTSimulatorQtWidget::Cleanup(void) {
+
 }
 
 void sawATINetFTSimulatorQtWidget::timerEvent(QTimerEvent * event){

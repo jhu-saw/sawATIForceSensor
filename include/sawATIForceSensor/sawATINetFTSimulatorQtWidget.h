@@ -22,6 +22,7 @@
 #include <cisstCommon.h>
 #include <cisstVector/vctFixedSizeVectorTypes.h>
 #include <cisstVector/vctQtWidgetDynamicVector.h>
+#include <cisstMultiTask/mtsComponent.h>
 
 #include <QWidget>
 #include <QEvent>
@@ -31,7 +32,7 @@
 #include <cisstOSAbstraction/osaSocket.h>
 
 
-class CISST_EXPORT sawATINetFTSimulatorQtWidget: public QWidget, public cmnGenericObject
+class CISST_EXPORT sawATINetFTSimulatorQtWidget: public QWidget, public mtsComponent
 {
   Q_OBJECT;
   CMN_DECLARE_SERVICES(CMN_NO_DYNAMIC_CREATION, CMN_LOG_ALLOW_ALL);
@@ -48,8 +49,11 @@ public:
                       double tx = 500, double ty = 500, double tz = 500);
   void SetLowerLimits(double fx = -50, double fy = -50, double fz = -70,
                       double tx = -500, double ty = -500, double tz = -500);
-  void setupUi(void);
-    
+  
+  void Startup(void);
+  void Cleanup(void);
+  void Configure(const std::string & filename = "");
+
   std::string GetStatus();
 
   
