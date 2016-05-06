@@ -32,6 +32,12 @@ if (cisst_FOUND_AS_REQUIRED)
   # load cisst configuration
   include (${CISST_USE_FILE})
 
+  # catkin/ROS paths
+  cisst_is_catkin_build (sawATIForceSensorExamples_IS_CATKIN_BUILT)
+  if (sawATIForceSensorExamples_IS_CATKIN_BUILT)
+    set (EXECUTABLE_OUTPUT_PATH "${CATKIN_DEVEL_PREFIX}/bin")
+  endif ()
+
   cisst_find_saw_component (sawTextToSpeech REQUIRED)
   cisst_find_saw_component (sawATIForceSensor REQUIRED)
 

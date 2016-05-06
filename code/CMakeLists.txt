@@ -29,13 +29,23 @@ if (cisst_FOUND_AS_REQUIRED)
   # load cisst configuration
   include (${CISST_USE_FILE})
 
+  # catkin/ROS paths
+  cisst_is_catkin_build (sawATIForceSensor_IS_CATKIN_BUILT)
+  if (sawATIForceSensor_IS_CATKIN_BUILT)
+    set (sawATIForceSensor_CONFIG_FILE_DIR "${CATKIN_DEVEL_PREFIX}/cmake")
+    set (LIBRARY_OUTPUT_PATH "${sawATIForceSensor_BINARY_DIR}/lib")
+  else ()
+    set (sawATIForceSensor_CONFIG_FILE_DIR "${sawATIForceSensor_BINARY_DIR}")
+  endif ()
+
   # create/configure file for find_package (sawATIForceSensor)
-  set (sawATIForceSensor_INCLUDE_DIR "${sawATIForceSensor_SOURCE_DIR}/include")
+  set (sawATIForceSensor_INCLUDE_DIR "${sawATIForceSensor_SOURCE_DIR}/include"
+                                     "${sawATIForceSensor_BINARY_DIR}/include")
   set (sawATIForceSensor_LIBRARY_DIR "${LIBRARY_OUTPUT_PATH}")
   set (sawATIForceSensor_LIBRARIES sawATIForceSensor)
 
   include_directories (${sawATIForceSensor_INCLUDE_DIR})
-  set (sawATIForceSensor_HEADER_DIR "${sawATIForceSensor_INCLUDE_DIR}/sawATIForceSensor")
+  set (sawATIForceSensor_HEADER_DIR "${sawATIForceSensor_SOURCE_DIR}/include/sawATIForceSensor")
 
   set (HEADER_FILES
        ${sawATIForceSensor_HEADER_DIR}/sawATIForceSensorExport.h
@@ -59,7 +69,7 @@ if (cisst_FOUND_AS_REQUIRED)
   endif (CISST_HAS_QT)
 
   configure_file ("${CMAKE_CURRENT_SOURCE_DIR}/sawATIForceSensorConfig.cmake.in"
-                  "${sawATIForceSensor_BINARY_DIR}/sawATIForceSensorConfig.cmake"
+                  "${sawATIForceSensor_CONFIG_FILE_DIR}/sawATIForceSensorConfig.cmake"
                   @ONLY@)
 
   # Install targets for headers and library
