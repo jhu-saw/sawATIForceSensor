@@ -2,8 +2,7 @@
 # Author(s):  Preetham Chalasani
 # Created on: 2014-08-18
 #
-# (C) Copyright 2014 Johns Hopkins University (JHU), All Rights
-# Reserved.
+# (C) Copyright 2014-2016 Johns Hopkins University (JHU), All Rights Reserved.
 #
 # --- begin cisst license - do not edit ---
 #
@@ -12,6 +11,10 @@
 # http://www.cisst.org/cisst/license.txt.
 #
 # --- end cisst license ---
+
+project (sawATIForceSensor)
+
+cmake_minimum_required (VERSION 2.8)
 
 set (REQUIRED_CISST_LIBRARIES
      cisstCommon
@@ -22,7 +25,7 @@ set (REQUIRED_CISST_LIBRARIES
      cisstParameterTypes
      )
 
-find_package (cisst REQUIRED ${REQUIRED_CISST_LIBRARIES})
+find_package (cisst 1.0.6 REQUIRED ${REQUIRED_CISST_LIBRARIES})
 
 if (cisst_FOUND_AS_REQUIRED)
 
@@ -32,17 +35,29 @@ if (cisst_FOUND_AS_REQUIRED)
   # catkin/ROS paths
   cisst_is_catkin_build (sawATIForceSensor_IS_CATKIN_BUILT)
   if (sawATIForceSensor_IS_CATKIN_BUILT)
-    set (sawATIForceSensor_CONFIG_FILE_DIR "${CATKIN_DEVEL_PREFIX}/cmake")
+    set (sawATIForceSensor_CONFIG_FILE_DIR
+         "${CATKIN_DEVEL_PREFIX}/share/sawATIForceSensor/cmake")
     set (LIBRARY_OUTPUT_PATH "${sawATIForceSensor_BINARY_DIR}/lib")
   else ()
     set (sawATIForceSensor_CONFIG_FILE_DIR "${sawATIForceSensor_BINARY_DIR}")
   endif ()
 
   # create/configure file for find_package (sawATIForceSensor)
-  set (sawATIForceSensor_INCLUDE_DIR "${sawATIForceSensor_SOURCE_DIR}/include"
-                                     "${sawATIForceSensor_BINARY_DIR}/include")
+  set (sawATIForceSensor_INCLUDE_DIR
+       "${sawATIForceSensor_SOURCE_DIR}/include"
+       "${sawATIForceSensor_BINARY_DIR}/include")
   set (sawATIForceSensor_LIBRARY_DIR "${LIBRARY_OUTPUT_PATH}")
   set (sawATIForceSensor_LIBRARIES sawATIForceSensor)
+
+  # Set the version number
+  set (sawATIForceSensor_VERSION_MAJOR "1")
+  set (sawATIForceSensor_VERSION_MINOR "3")
+  set (sawATIForceSensor_VERSION_PATCH "0")
+  set (sawATIForceSensor_VERSION "${sawATIForceSensor_VERSION_MAJOR}.${sawATIForceSensor_VERSION_MINOR}.${sawATIForceSensor_VERSION_PATCH}")
+
+  # Generate sawATIForceSensorRevision.h
+  configure_file ("${sawATIForceSensor_SOURCE_DIR}/code/sawATIForceSensorRevision.h.in"
+                  "${sawATIForceSensor_BINARY_DIR}/include/sawATIForceSensor/sawATIForceSensorRevision.h")
 
   include_directories (${sawATIForceSensor_INCLUDE_DIR})
   set (sawATIForceSensor_HEADER_DIR "${sawATIForceSensor_SOURCE_DIR}/include/sawATIForceSensor")
@@ -54,8 +69,8 @@ if (cisst_FOUND_AS_REQUIRED)
        )
 
   set (SOURCE_FILES
-       mtsATINetFTSensor.cpp
-       mtsATINetFTConfig.cpp
+       code/mtsATINetFTSensor.cpp
+       code/mtsATINetFTConfig.cpp
        )
 
   add_library (sawATIForceSensor ${HEADER_FILES} ${SOURCE_FILES})
@@ -64,17 +79,25 @@ if (cisst_FOUND_AS_REQUIRED)
 
   # add Qt code
   if (CISST_HAS_QT)
-    add_subdirectory (Qt)
+    add_subdirectory (code/Qt)
     set (sawATIForceSensor_LIBRARIES ${sawATIForceSensor_LIBRARIES} ${sawATIForceSensorQt_LIBRARIES})
   endif (CISST_HAS_QT)
 
-  configure_file ("${CMAKE_CURRENT_SOURCE_DIR}/sawATIForceSensorConfig.cmake.in"
-                  "${sawATIForceSensor_CONFIG_FILE_DIR}/sawATIForceSensorConfig.cmake"
-                  @ONLY@)
+  set (sawATIForceSensor_CMAKE_CONFIG_FILE
+       "${sawATIForceSensor_CONFIG_FILE_DIR}/sawATIForceSensorConfig.cmake")
+
+  configure_file ("${CMAKE_CURRENT_SOURCE_DIR}/cmake/sawATIForceSensorConfig.cmake.in"
+                  "${sawATIForceSensor_CMAKE_CONFIG_FILE}"
+                  @ONLY)
+
+  cisst_add_config_version ("${sawATIForceSensor_CONFIG_FILE_DIR}/sawATIForceSensorConfigVersion.cmake"
+                            VERSION ${sawATIForceSensor_VERSION}
+                            DESTINATION ${CISST_CMAKE_INSTALL_SUFFIX}/saw
+                            COMPONENT sawATIForceSensor)
 
   # Install targets for headers and library
   install (DIRECTORY
-           ${sawATIForceSensor_INCLUDE_DIR}/sawATIForceSensor
+           "${sawATIForceSensor_INCLUDE_DIR}/sawATIForceSensor"
            DESTINATION include
            PATTERN .svn EXCLUDE)
 

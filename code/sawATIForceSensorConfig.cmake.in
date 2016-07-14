@@ -1,9 +1,0 @@
-# Author(s):  Anton Deguet
-# Created on: 2014-08-29
-#
-# (C) Copyright 2014 Johns Hopkins University (JHU), All Rights Reserved.
-#
-
-set (sawATIForceSensor_INCLUDE_DIR "@sawATIForceSensor_INCLUDE_DIR@")
-set (sawATIForceSensor_LIBRARY_DIR "@sawATIForceSensor_LIBRARY_DIR@")
-set (sawATIForceSensor_LIBRARIES   "@sawATIForceSensor_LIBRARIES@")

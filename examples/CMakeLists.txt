@@ -2,7 +2,7 @@
 # Author(s):  Preetham Chalasani
 # Created on: 2014-08-18
 #
-# (C) Copyright 2014 Johns Hopkins University (JHU), All Rights
+# (C) Copyright 2014-2016 Johns Hopkins University (JHU), All Rights
 # Reserved.
 #
 # --- begin cisst license - do not edit ---
@@ -38,8 +38,8 @@ if (cisst_FOUND_AS_REQUIRED)
     set (EXECUTABLE_OUTPUT_PATH "${CATKIN_DEVEL_PREFIX}/bin")
   endif ()
 
-  cisst_find_saw_component (sawTextToSpeech REQUIRED)
-  cisst_find_saw_component (sawATIForceSensor REQUIRED)
+  find_package (sawTextToSpeech REQUIRED)
+  find_package (sawATIForceSensor REQUIRED)
 
   if (sawATIForceSensor_FOUND)
 
@@ -51,8 +51,8 @@ if (cisst_FOUND_AS_REQUIRED)
                       ${sawTextToSpeech_LIBRARY_DIR})
 
     if (CISST_HAS_QT)
-      add_executable(sawATIForceSensorExample
-                     main.cpp
+      add_executable (sawATIForceSensorExample
+                      main.cpp
                      )
 
       # link against non cisst libraries and cisst components
@@ -78,9 +78,9 @@ if (cisst_FOUND_AS_REQUIRED)
       cisst_target_link_libraries (sawATIForceSensorSimulator ${REQUIRED_CISST_LIBRARIES})
       set_property (TARGET sawATIForceSensorSimulator PROPERTY FOLDER "sawATIForceSensor")
 
-      add_executable(sawATIForceSensorWithSimulator
-                    mainForceWithSimulator.cpp
-                    )
+      add_executable (sawATIForceSensorWithSimulator
+                     mainForceWithSimulator.cpp
+                     )
 
       # link against non cisst libraries and cisst components
       target_link_libraries (sawATIForceSensorWithSimulator
