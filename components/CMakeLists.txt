@@ -98,6 +98,7 @@ if (cisst_FOUND_AS_REQUIRED)
   # Install targets for headers and library
   install (DIRECTORY
            "${sawATIForceSensor_INCLUDE_DIR}/sawATIForceSensor"
+           "${sawATIForceSensor_BINARY_DIR}/include/sawATIForceSensor"
            DESTINATION include
            PATTERN .svn EXCLUDE)
 
@@ -106,7 +107,7 @@ if (cisst_FOUND_AS_REQUIRED)
            LIBRARY DESTINATION lib
            ARCHIVE DESTINATION lib)
 
-  install (FILES "${sawATIForceSensor_BINARY_DIR}/sawATIForceSensorConfig.cmake"
-           DESTINATION "${CISST_CMAKE_INSTALL_SUFFIX}/saw")
+  install (FILES "${sawATIForceSensor_CMAKE_CONFIG_FILE}"
+           DESTINATION "share/sawATIForceSensor")
 
 endif (cisst_FOUND_AS_REQUIRED)
