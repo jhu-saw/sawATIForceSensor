@@ -308,7 +308,7 @@ void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
         ErrorMsg->setStyleSheet("QLineEdit {background-color:green }");
     }
 
-    QFTPlot->updateGL();
+    QFTPlot->update();
 }
 
 void mtsATINetFTQtWidget::SlotRebiasFTSensor(void)
