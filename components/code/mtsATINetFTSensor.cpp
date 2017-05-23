@@ -42,6 +42,8 @@ public:
 
 #if (CISST_OS == CISST_LINUX)
 #include <netinet/in.h>
+#elif (CISST_OS == CISST_WINDOWS)
+#include <Winsock2.h>
 #endif
 
 CMN_IMPLEMENT_SERVICES(mtsATINetFTSensor)
