@@ -19,8 +19,7 @@
 
 
 #include <sawATIForceSensor/sawATINetFTSimulatorQtWidget.h>
-
-#include <cisstCommon.h>
+	
 #include <cisstOSAbstraction.h>
 #include <cisstMultiTask/mtsQtApplication.h>
 #include <cisstMultiTask/mtsCollectorState.h>

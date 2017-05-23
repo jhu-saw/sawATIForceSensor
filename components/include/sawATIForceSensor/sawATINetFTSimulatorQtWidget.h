@@ -19,7 +19,7 @@
 #ifndef _sawATINetFTSimulatorQtWidget_h
 #define _sawATINetFTSimulatorQtWidget_h
 
-#include <cisstCommon.h>
+#include <cisstCommon/cmnUnits.h>
 #include <cisstVector/vctFixedSizeVectorTypes.h>
 #include <cisstVector/vctQtWidgetDynamicVector.h>
 #include <cisstMultiTask/mtsComponent.h>
