@@ -166,7 +166,7 @@ void mtsATINetFTSensor::Run(void)
   
     // Bias the FT data based on bias vec
     FTBiasedData = FTRawData - FTBiasVec;
-    FTBiasedData.Valid() = FTRawData.Valid();
+    ForceTorque.Valid() = FTRawData.Valid();
     ForceTorque.SetForce(FTBiasedData);
   
     // Update PercentOfMax, 0 if there is an error or is saturated

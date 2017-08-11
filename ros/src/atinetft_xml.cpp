@@ -26,6 +26,9 @@ http://www.cisst.org/cisst/license.txt.
 #include <sawATIForceSensor/mtsATINetFTSensor.h>
 #include <sawATIForceSensor/mtsATINetFTQtWidget.h>
 
+#include <ros/ros.h>
+#include <cisst_ros_bridge/mtsROSBridge.h>
+
 int main(int argc, char ** argv)
 {
     cmnLogger::SetMask(CMN_LOG_ALLOW_ALL);
@@ -36,11 +39,12 @@ int main(int argc, char ** argv)
 
     // parse options
     cmnCommandLineOptions options;
-    std::string gcmip = "-1";
     std::string configFile = "";
     std::string ftip = "192.168.1.8";
     int customPort = 0;
     double socketTimeout = 10 * cmn_ms;
+    double rosPeriod = 10.0 * cmn_ms;
+    std::string rosNamespace = "/atinetft";
 
     options.AddOptionOneValue("c", "configuration",
                               "XML configuration file",
@@ -49,7 +53,9 @@ int main(int argc, char ** argv)
     options.AddOptionOneValue("i", "ftip",
                               "Force sensor IP address",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &ftip);
-
+    options.AddOptionOneValue("r", "ros-period",
+                              "period in seconds to read all tool positions (default 0.01, 10 ms, 100Hz).  There is no point to have a period higher than the tracker component",
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &rosPeriod);
     options.AddOptionOneValue("p", "customPort",
                               "Custom Port Number",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &customPort);
@@ -94,6 +100,25 @@ int main(int argc, char ** argv)
 
     componentManager->Connect("ATINetFTGUI", "RequiresATINetFTSensor",
                               "ForceSensor", "ProvidesATINetFTSensor");
+
+
+    // Ros Bridge
+    std::string bridgeName = "sawATIForceSensor" + rosNamespace;
+    std::replace(bridgeName.begin(), bridgeName.end(), '/', '_');
+    mtsROSBridge * rosBridge = new mtsROSBridge(bridgeName,
+                                                rosPeriod, true);
+
+    // configure the bridge
+    rosBridge->AddPublisherFromCommandRead<prmForceCartesianGet, geometry_msgs::WrenchStamped> 
+        ( forceSensor->GetName(), "GetForceTorque",rosNamespace + "/wrench");
+
+    rosBridge->AddPublisherFromCommandRead<mtsDoubleVec, geometry_msgs::WrenchStamped>
+        ( forceSensor->GetName(), "GetFTData", rosNamespace + "/raw_wrench");
+
+
+    componentManager->AddComponent(rosBridge);
+    componentManager->Connect(bridgeName, forceSensor->GetName(),
+                              forceSensor->GetName(), "ProvidesATINetFTSensor");
 
     componentManager->CreateAll();
     componentManager->WaitForStateAll(mtsComponentState::READY);

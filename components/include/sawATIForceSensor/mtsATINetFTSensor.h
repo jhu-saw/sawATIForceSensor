@@ -22,7 +22,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstOSAbstraction/osaSocket.h>
 #include <cisstMultiTask/mtsTaskContinuous.h>
 #include <cisstMultiTask/mtsVector.h>
-#include <cisstParameterTypes/prmForceCartesianSet.h>
+#include <cisstParameterTypes/prmForceCartesianGet.h>
 
 #include <sawATIForceSensor/mtsATINetFTConfig.h>
 
@@ -96,7 +96,7 @@ private:
     /// force / max force for each axis. in 0-100.
     mtsDoubleVec PercentOfMaxVec;
   
-    prmForceCartesianSet ForceTorque;
+    prmForceCartesianGet ForceTorque;
 
     std::string  IP;
 
