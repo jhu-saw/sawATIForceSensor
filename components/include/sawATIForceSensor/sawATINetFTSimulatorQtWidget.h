@@ -31,6 +31,8 @@
 #include <QPushButton>
 #include <cisstOSAbstraction/osaSocket.h>
 
+// Always include last
+#include <sawATIForceSensor/sawATIForceSensorQtExport.h>
 
 class CISST_EXPORT sawATINetFTSimulatorQtWidget: public QWidget, public mtsComponent
 {
