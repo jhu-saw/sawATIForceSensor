@@ -44,11 +44,11 @@ int main(int argc, char ** argv)
 
     options.AddOptionOneValue("c", "configuration",
                               "XML configuration file",
-                              cmnCommandLineOptions::REQUIRED_OPTION, &configFile);
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &configFile);
 
     options.AddOptionOneValue("i", "ftip",
                               "Force sensor IP address",
-                              cmnCommandLineOptions::OPTIONAL_OPTION, &ftip);
+                              cmnCommandLineOptions::REQUIRED_OPTION, &ftip);
 
     options.AddOptionOneValue("p", "customPort",
                               "Custom Port Number",

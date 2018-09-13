@@ -75,6 +75,7 @@ private:
     bool IsRebiasRequested;
     bool IsSaturated;
     bool HasError;
+    bool IsCalibFileLoaded;
 
     int ATI_PORT;
     int ATI_COMMAND;
@@ -91,8 +92,7 @@ private:
     bool UseCustomPort;
     double SocketTimeout;
     mtsDoubleVec FTRawData;
-    mtsDoubleVec FTBiasedData;
-    mtsDoubleVec FTBiasVec;
+
     /// force / max force for each axis. in 0-100.
     mtsDoubleVec PercentOfMaxVec;
   

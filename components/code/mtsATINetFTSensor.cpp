@@ -50,25 +50,23 @@ CMN_IMPLEMENT_SERVICES(mtsATINetFTSensor)
 
 mtsATINetFTSensor::mtsATINetFTSensor(const std::string & componentName):
     mtsTaskContinuous(componentName, 5000),
-    ATI_PORT(49152),                /* Port the Net F/T always uses */
-    ATI_COMMAND(2),                 /* Command code 2 starts streaming */
-    ATI_NUM_SAMPLES(1),              /* Will send 1 sample `before stopping */
+    ATI_PORT(49152),                 /* Port the Net F/T always uses */
+    ATI_COMMAND(0x0002),             /* Command code 2 starts streaming */
+    ATI_NUM_SAMPLES(0),              /* Infinite streaming before stop streaming is sent */
     Socket(osaSocket::UDP)
 {
     Data = new mtsATINetFTSensorData;
     IsSaturated = false;
+    IsCalibFileLoaded = false;
     Data->Port = ATI_PORT;
 
     FTRawData.SetSize(6);
     FTRawData.Zeros();
-    FTBiasedData.SetSize(6);
-    FTBiasVec.SetSize(6);
-    FTBiasVec.Zeros();
 
     PercentOfMaxVec.SetSize(6);
     PercentOfMaxVec.Zeros();
-  
-    StateTable.AddData(FTBiasedData , "FTData");
+
+    StateTable.AddData(FTRawData    , "FTData");
     StateTable.AddData(ForceTorque  , "ForceTorque");
     StateTable.AddData(IsConnected  , "IsConnected");
     StateTable.AddData(IsSaturated  , "IsSaturated");
@@ -78,7 +76,7 @@ mtsATINetFTSensor::mtsATINetFTSensor(const std::string & componentName):
     mtsInterfaceProvided * interfaceProvided = AddInterfaceProvided("ProvidesATINetFTSensor");
     if (interfaceProvided) {
         interfaceProvided->AddCommandReadState(StateTable, StateTable.PeriodStats, "GetPeriodStatistics");
-        interfaceProvided->AddCommandReadState(StateTable, FTBiasedData, "GetFTData");
+        interfaceProvided->AddCommandReadState(StateTable, FTRawData, "GetFTData");
         interfaceProvided->AddCommandReadState(StateTable, ForceTorque, "GetForceTorque");
         interfaceProvided->AddCommandReadState(StateTable, IsConnected, "GetIsConnected");
         interfaceProvided->AddCommandReadState(StateTable, IsSaturated, "GetIsSaturated");
@@ -115,12 +113,14 @@ void mtsATINetFTSensor::Configure(const std::string & filename,
         Data->Port = customPortNumber;
     }
 
-    if (NetFTConfig.LoadCalibrationFile(filename)) {
-        CMN_LOG_CLASS_RUN_WARNING << "Configure: file loaded - "
-                                  << filename << std::endl;
+    if(!filename.empty()) {
+        if (NetFTConfig.LoadCalibrationFile(filename)) {
+            IsCalibFileLoaded = true;
+            CMN_LOG_CLASS_RUN_WARNING << "Configure: file loaded - "
+                                      << filename << std::endl;
+        }
+        CMN_LOG_CLASS_RUN_VERBOSE << "Force Ranges: " <<  NetFTConfig.GenInfo.MaxRatings << std::endl;
     }
-    CMN_LOG_CLASS_RUN_VERBOSE << "Force Ranges: " <<  NetFTConfig.GenInfo.MaxRatings << std::endl;
-  
 }
 
 void mtsATINetFTSensor::Cleanup(void)
@@ -147,6 +147,19 @@ void mtsATINetFTSensor::SetIPAddress(const std::string & ip)
 
 void mtsATINetFTSensor::Run(void)
 {
+    if(!IsConnected) {
+        // Start streaming
+        *(uint16*)&(Data->Request)[2] = htons(ATI_COMMAND);
+        int result = Socket.Send((const char *)(Data->Request), 8, SocketTimeout);
+        if (result == -1) {
+            IsConnected = false;
+            CMN_LOG_CLASS_RUN_WARNING << "GetReadings: UDP send failed" << std::endl;
+            return;
+        } else {
+            IsConnected = true;
+        }
+    }
+
     ProcessQueuedCommands();
     if(UseCustomPort) {
         GetReadingsFromCustomPort();
@@ -154,48 +167,32 @@ void mtsATINetFTSensor::Run(void)
         GetReadings();
     }
 
-    FTRawData.SetValid(true);
-  
-    if (!IsConnected){
-       FTRawData.SetValid(false);
-    }
     if (IsSaturated || HasError) {
-       CMN_LOG_CLASS_RUN_WARNING << "Run: sensor saturated or has error" << std::endl;
-       FTRawData.SetValid(false);
+        CMN_LOG_CLASS_RUN_WARNING << "Run: sensor saturated or has error" << std::endl;
+        FTRawData.SetValid(false);
     }
-  
+
     // Bias the FT data based on bias vec
-    FTBiasedData = FTRawData - FTBiasVec;
     ForceTorque.Valid() = FTRawData.Valid();
-    ForceTorque.SetForce(FTBiasedData);
-  
+    ForceTorque.SetForce(FTRawData);
+
     // Update PercentOfMax, 0 if there is an error or is saturated
     /// \note what about isConnected?
     if (IsSaturated || HasError) {
         PercentOfMaxVec.SetAll(100.0);
-    }
-    else
-    {
+    } else if(IsCalibFileLoaded) {
         PercentOfMaxVec = (FTRawData.Abs().ElementwiseDivide(vctDoubleVec(NetFTConfig.GenInfo.MaxRatings))) * 100.0;
     }
-  
+
 }
 
 void mtsATINetFTSensor::GetReadings(void)
 {
     int result;
-    // try to send, but timeout after 10 ms
-    result = Socket.Send((const char *)(Data->Request), 8, SocketTimeout);
-    if (result == -1) {
-        IsConnected = false;
-        CMN_LOG_CLASS_RUN_WARNING << "GetReadings: UDP send failed" << std::endl;
-        return;
-    }
 
     // if we were able to send we should now receive
     result = Socket.Receive((char *)(Data->Response), 36, SocketTimeout);
     if (result > 0) {
-        IsConnected = true;
         this->Data->RdtSequence = ntohl(*(uint32*)&(Data->Response)[0]);
         this->Data->FtSequence = ntohl(*(uint32*)&(Data->Response)[4]);
         this->Data->Status = ntohl(*(uint32*)&(Data->Response)[8]);
@@ -208,9 +205,11 @@ void mtsATINetFTSensor::GetReadings(void)
             temp = ntohl(*(int32*)&(Data->Response)[12 + i * 4]);
             FTRawData[i]= (double)((double)temp/1000000);
         }
+        FTRawData.SetValid(true);
     }
     else {
         IsConnected = false;
+        FTRawData.SetValid(false);
         // If there are packets missing then the state table will not be updated;
         // when queried previous FT will be returned;
         // If you want FT to be zero, when a packet is missed, uncomment the below line
@@ -237,6 +236,8 @@ void mtsATINetFTSensor::GetReadingsFromCustomPort()
                 FTRawData[i] = packetReceived[i];
             }
 
+            FTRawData.SetValid(true);
+
             // Error bits
             int error = (int)buffer[48];
             int saturated = (int)buffer[52];
@@ -256,6 +257,7 @@ void mtsATINetFTSensor::GetReadingsFromCustomPort()
         }
     } else {
         CMN_LOG_CLASS_RUN_WARNING << "GetReadings: UDP receive from xPC failed" << std::endl;
+        FTRawData.SetValid(false);
         IsConnected = false;
         // FTRawData.Zeros();
     }
@@ -282,8 +284,16 @@ void mtsATINetFTSensor::SetFilter(const std::string &filterName)
 
 void mtsATINetFTSensor::Rebias(void)
 {
-    FTBiasVec = FTRawData;
-    IsRebiasRequested = true;
+    if(UseCustomPort)
+        return;
+
+    *(uint16*)&(Data->Request)[2] = htons(0x0042);
+    int result = Socket.Send((const char *)(Data->Request), 8, SocketTimeout);
+    if (result == -1) {
+        IsConnected = false;
+        CMN_LOG_CLASS_RUN_WARNING << "Rebias: UDP send failed" << std::endl;
+        return;
+    }
 
     EventTriggers.ErrorMsg(std::string("Sensor ReBiased"));
     CMN_LOG_CLASS_RUN_VERBOSE << "FT Sensor Rebiased " << std::endl;
