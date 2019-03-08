@@ -153,6 +153,8 @@ void mtsATINetFTSensor::Run(void)
         int result = Socket.Send((const char *)(Data->Request), 8, SocketTimeout);
         if (result == -1) {
             IsConnected = false;
+            FTRawData.SetValid(false);
+            ForceTorque.SetValid(false);
             CMN_LOG_CLASS_RUN_WARNING << "GetReadings: UDP send failed" << std::endl;
             return;
         } else {
