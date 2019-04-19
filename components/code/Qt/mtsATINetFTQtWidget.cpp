@@ -36,7 +36,6 @@ CMN_IMPLEMENT_SERVICES_DERIVED_ONEARG(mtsATINetFTQtWidget, mtsComponent, std::st
 
 mtsATINetFTQtWidget::mtsATINetFTQtWidget(const std::string & componentName, double periodInSeconds):
     mtsComponent(componentName),
-    PlotIndex(0),
     TimerPeriodInMilliseconds(periodInSeconds * 1000.0) // Qt timers are in milliseconds
 {
     // Setup CISST Interface
@@ -103,44 +102,7 @@ void mtsATINetFTQtWidget::setupUi()
     QSpacerItem * vSpacer = new QSpacerItem(40, 10, QSizePolicy::Expanding, QSizePolicy::Preferred);
 //    QSpacerItem * hSpacer = new QSpacerItem(10, 40, QSizePolicy::Expanding, QSizePolicy::Preferred);
 
-    // Force/Torque display widgets and layouts
-    QVBoxLayout * spinBoxLayout = new QVBoxLayout;
-    QHBoxLayout * ftValuesLayout = new QHBoxLayout;
-    QLabel * ftLabel = new QLabel("Values");
-    ftValuesLayout->addWidget(ftLabel);
-
-    QFTSensorValues = new vctQtWidgetDynamicVectorDoubleRead();
-    QFTSensorValues->SetPrecision(4);
-
-    ftValuesLayout->addWidget(QFTSensorValues);
-    spinBoxLayout->addLayout(ftValuesLayout);  
-
-    // Combo box to select the plot item
-    QComboBox * QPlotSelectItem = new QComboBox;
-    QPlotSelectItem->addItem("Fx");
-    QPlotSelectItem->addItem("Fy");
-    QPlotSelectItem->addItem("Fz");
-    QPlotSelectItem->addItem("FNorm");
-    QPlotSelectItem->addItem("Fxyz");
-    QPlotSelectItem->addItem("Txyz");
-
-    // Upper and lower limits of the plot
-    QVBoxLayout * plotLabelLayout = new QVBoxLayout;
-    UpperLimit = new QLabel("U");
-    UpperLimit->setAlignment(Qt::AlignTop|Qt::AlignRight);
-    LowerLimit = new QLabel("L");
-    LowerLimit->setAlignment(Qt::AlignBottom | Qt::AlignRight);
-    plotLabelLayout->addWidget(UpperLimit);
-    plotLabelLayout->addWidget(LowerLimit);
-
-    // Initilize ft sensor plot
-    SetupSensorPlot();
-
-    // Add combo box, upper/lower limits labels and plot to a single layout
-    QHBoxLayout * sensorPlotLayout = new QHBoxLayout;
-    sensorPlotLayout->addWidget(QPlotSelectItem);
-    sensorPlotLayout->addLayout(plotLabelLayout);
-    sensorPlotLayout->addWidget(QFTPlot);
+    QFTWidget = new vctForceTorqueQtWidget();
 
     // Layout for Error Messages
     QHBoxLayout * errorLayout = new QHBoxLayout;
@@ -162,8 +124,7 @@ void mtsATINetFTQtWidget::setupUi()
 
     // Tab1 layout order
     tab1Layout->addWidget(instructionsLabel);
-    tab1Layout->addLayout(spinBoxLayout);
-    tab1Layout->addLayout(sensorPlotLayout);
+    tab1Layout->addWidget(QFTWidget);
     tab1Layout->addSpacerItem(vSpacer);
     tab1Layout->addLayout(errorLayout);
     tab1Layout->addLayout(buttonLayout);
@@ -194,41 +155,6 @@ void mtsATINetFTQtWidget::setupUi()
 
     // setup Qt Connection
     connect(RebiasButton, SIGNAL(clicked()), this, SLOT(SlotRebiasFTSensor()));
-    connect(QPlotSelectItem, SIGNAL(currentIndexChanged(int)), this, SLOT(SlotPlotIndex(int)));
-
-    QPlotSelectItem->setCurrentIndex(FNorm);    
-}
-
-void mtsATINetFTQtWidget::SetupSensorPlot()
-{
-    // Plot to show force/torque graph
-    QFTPlot = new vctPlot2DOpenGLQtWidget();
-    QFTPlot->SetBackgroundColor(vct3(1.0, 1.0, 1.0));
-    QFTPlot->resize(QFTPlot->sizeHint());
-    QFTPlot->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
-    ForceScale = QFTPlot->AddScale("Force");
-    TorqueScale = QFTPlot->AddScale("Torque");
-    ForceSignal[0] = ForceScale->AddSignal("fx");
-    ForceSignal[0]->SetColor(vctDouble3(1.0, 0.0, 0.0));
-    ForceSignal[0]->SetVisible(false);
-    ForceSignal[1] = ForceScale->AddSignal("fy");
-    ForceSignal[1]->SetColor(vctDouble3(0.0, 1.0, 0.0));
-    ForceSignal[1]->SetVisible(false);
-    ForceSignal[2] = ForceScale->AddSignal("fz");
-    ForceSignal[2]->SetColor(vctDouble3(0.0, 0.0, 1.0));
-    ForceSignal[2]->SetVisible(false);
-    TorqueSignal[0] = TorqueScale->AddSignal("tx");
-    TorqueSignal[0]->SetColor(vctDouble3(1.0, 0.0, 0.0));
-    TorqueSignal[0]->SetVisible(false);
-    TorqueSignal[1] = TorqueScale->AddSignal("ty");
-    TorqueSignal[1]->SetColor(vctDouble3(0.0, 1.0, 0.0));
-    TorqueSignal[1]->SetVisible(false);
-    TorqueSignal[2] = TorqueScale->AddSignal("tz");
-    TorqueSignal[2]->SetColor(vctDouble3(0.0, 0.0, 1.0));
-    TorqueSignal[2]->SetVisible(false);
-    FNormSignal = ForceScale->AddSignal("fnorm");
-    FNormSignal->SetColor(vctDouble3(0.0, 0.0, 0.0));
-    FNormSignal->SetVisible(false);
 }
 
 void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
@@ -245,48 +171,9 @@ void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
         CMN_LOG_CLASS_RUN_ERROR << "ForceSensor.GetFTData failed, \""
                                 << executionResult << "\"" << std::endl;
     }
-
-    QFTSensorValues->SetValue(ForceSensor.FTReadings);
-
-    // Uppdate the plot
-    vctDoubleVec forceOnly(3, 0.0), torqueOnly(3, 0.0);
-    forceOnly.Assign(ForceSensor.FTReadings, 3);
-    torqueOnly.Assign(ForceSensor.FTReadings, 3, 0, 3);
-    ForceSensor.GetPeriodStatistics(IntervalStatistics);
-    QMIntervalStatistics->SetValue(IntervalStatistics);
-
-    if(PlotIndex ==  Fx || PlotIndex ==  Fy || PlotIndex ==  Fz)           // Fx,Fy or Fz
-        ForceSignal[PlotIndex]->AppendPoint(vctDouble2(ForceSensor.FTReadings.Timestamp(),
-                                                       forceOnly.Element(PlotIndex)));
-    else if(PlotIndex == Fxyz) {        // Fx, Fy & Fz
-        for (int i = 0; i < 3; ++i) {
-            ForceSignal[i]->AppendPoint(vctDouble2(ForceSensor.FTReadings.Timestamp(),
-                                                   forceOnly.Element(i)));
-        }
-    }
-    else if(PlotIndex == FNorm)     // Norm(Force)
-        FNormSignal->AppendPoint(vctDouble2(ForceSensor.FTReadings.Timestamp(),
-                                            forceOnly.Norm()));
-
-    else if(PlotIndex == Txyz) {     // Tx, Ty & Tz
-        for (int i = 0; i < 3; ++i) {
-            TorqueSignal[i]->AppendPoint(vctDouble2(ForceSensor.FTReadings.Timestamp(),
-                                                    torqueOnly.Element(i)));
-        }
-    }
-
-    // Update the lower/upper limits on the plot
-    vct2 range;
-    if(PlotIndex < Txyz) {
-        range = ForceScale->GetViewingRangeY();
-    } else if (PlotIndex == Txyz) {
-        range = TorqueScale->GetViewingRangeY();
-    }
-    QString text;
-    text.setNum(range[0], 'f', 2);
-    LowerLimit->setText(text);
-    text.setNum(range[1], 'f', 2);
-    UpperLimit->setText(text);
+    QFTWidget->SetValue(ForceSensor.FTReadings.Ref(3, 0),
+                        ForceSensor.FTReadings.Ref(3, 3),
+                        ForceSensor.FTReadings.Timestamp());
 
     // Update error state
     ForceSensor.GetIsConnected(ForceSensor.IsConnected);
@@ -306,37 +193,9 @@ void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
         ErrorMsg->setText(QString("Connected : No Error"));
         ErrorMsg->setStyleSheet("QLineEdit {background-color:green }");
     }
-
-    QFTPlot->update();
 }
 
 void mtsATINetFTQtWidget::SlotRebiasFTSensor(void)
 {
     ForceSensor.RebiasForceTorque();
-}
-
-void mtsATINetFTQtWidget::SlotPlotIndex(int newAxis)
-{    
-    PlotIndex = newAxis;
-    for (int i = 0; i < 5; ++i) {
-        ForceSignal[i]->SetVisible(false);
-        TorqueSignal[i]->SetVisible(false);
-    }
-    FNormSignal->SetVisible(false);
-
-    if(PlotIndex == Fx || PlotIndex == Fy || PlotIndex == Fz) {
-        ForceSignal[PlotIndex]->SetVisible(true);
-    }
-    else if(PlotIndex == Fxyz) {
-        ForceSignal[0]->SetVisible(true);
-        ForceSignal[1]->SetVisible(true);
-        ForceSignal[2]->SetVisible(true);
-    } else if (PlotIndex == Txyz){
-        TorqueSignal[0]->SetVisible(true);
-        TorqueSignal[1]->SetVisible(true);
-        TorqueSignal[2]->SetVisible(true);
-    } else if (PlotIndex == FNorm) {
-        FNormSignal->SetVisible(true);
-    }
-    QFTPlot->SetContinuousExpandYResetSlot();
 }

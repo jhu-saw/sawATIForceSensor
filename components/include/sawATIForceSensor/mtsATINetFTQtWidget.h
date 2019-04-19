@@ -19,17 +19,15 @@ http://www.cisst.org/cisst/license.txt.
 #ifndef _mtsATINetFTQtWidget_h
 #define _mtsATINetFTQtWidget_h
 
+#include <cisstVector/vctForceTorqueQtWidget.h>
 #include <cisstMultiTask/mtsComponent.h>
 #include <cisstMultiTask/mtsVector.h>
 #include <cisstMultiTask/mtsQtWidgetIntervalStatistics.h>
 #include <cisstParameterTypes/prmPositionCartesianGet.h>
-#include <cisstVector/vctQtWidgetDynamicVector.h>
-#include <cisstVector/vctPlot2DOpenGLQtWidget.h>
 
 #include <QWidget>
 #include <QtGui>
 #include <QPushButton>
-#include <QDoubleSpinBox>
 
 // Always include last
 #include <sawATIForceSensor/sawATIForceSensorQtExport.h>
@@ -60,12 +58,11 @@ protected:
 
 private:
     void setupUi(void);
-    void SetupSensorPlot(void);
 
 private:
     struct NetFTStruct {
         mtsFunctionVoid RebiasForceTorque;
-        mtsFunctionRead GetFTData;        
+        mtsFunctionRead GetFTData;
         mtsFunctionRead GetPeriodStatistics;
         mtsFunctionRead GetIsConnected;
         mtsFunctionRead GetIsSaturated;
@@ -78,26 +75,14 @@ private:
     } ForceSensor;
 
     mtsBool IsSaturated;
-    vctQtWidgetDynamicVectorDoubleRead * QFTSensorValues;
 
+    vctForceTorqueQtWidget * QFTWidget;
     QPushButton * RebiasButton;
     QLabel * ConnectionStatus;
 
-    QLabel * UpperLimit;
-    QLabel * LowerLimit;
-
     QLineEdit * ErrorMsg;
 
-    vctPlot2DOpenGLQtWidget * QFTPlot;
-    vctPlot2DBase::Signal * ForceSignal[3];
-    vctPlot2DBase::Signal * FNormSignal;
-    vctPlot2DBase::Signal * TorqueSignal[3];
-
-    vctPlot2DBase::Scale * ForceScale;
-    vctPlot2DBase::Scale * TorqueScale;
-
     double Time;
-    int PlotIndex;
     int TimerPeriodInMilliseconds;
 
     // Timing
@@ -107,7 +92,6 @@ private:
 private slots:
     void timerEvent(QTimerEvent * event);
     void SlotRebiasFTSensor(void);
-    void SlotPlotIndex(int newAxis);
 };
 
 CMN_DECLARE_SERVICES_INSTANTIATION(mtsATINetFTQtWidget);
