@@ -37,7 +37,7 @@ set (REQUIRED_CISST_LIBRARIES
      cisstParameterTypes
      cisstQt)
 
-find_package (cisst 1.0.8 REQUIRED ${REQUIRED_CISST_LIBRARIES})
+find_package (cisst 1.0.11 REQUIRED ${REQUIRED_CISST_LIBRARIES})
 
 if (cisst_FOUND_AS_REQUIRED)
 

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>atinetft_ros</name>
-  <version>1.0.0</version>
+  <version>1.4.0</version>
   <description>The ATI Net FT ROS package</description>
 
   <maintainer email="anton.deguet@jhu.edu">Anton Deguet</maintainer>

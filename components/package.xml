@@ -1,10 +1,10 @@
 <package>
   <name>saw_ati_force_sensor</name>
-  <version>1.3.0</version>
+  <version>1.4.0</version>
   <description>
   sawATIForceSensor
   </description>
-  <maintainer email="pchalas1@jhu.edu">Preetham Chalasani</maintainer>
+  <maintainer email="anton.deguet@jhu.edu">Anton Deguet</maintainer>
   <license>cisst</license>
   <url>https://github.com/jhu-saw/sawATIForceSensor</url>
 
