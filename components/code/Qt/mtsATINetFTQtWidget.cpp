@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2013-08-24
 
-  (C) Copyright 2013 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2013-2019 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -160,11 +160,12 @@ void mtsATINetFTQtWidget::setupUi()
 void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
 {
     event->accept();
-  
+
     // make sure we should update the display
     if (this->isHidden()) {
         return;
     }
+
     mtsExecutionResult executionResult;
     executionResult = ForceSensor.GetFTData(ForceSensor.FTReadings);
     if (!executionResult) {
@@ -179,7 +180,7 @@ void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
     ForceSensor.GetIsConnected(ForceSensor.IsConnected);
     ForceSensor.GetIsSaturated(ForceSensor.IsSaturated);
     ForceSensor.GetHasError(ForceSensor.HasError);
- 
+
     if(!ForceSensor.IsConnected) {
         ErrorMsg->setText(QString("Not Connected"));
         ErrorMsg->setStyleSheet("QLineEdit {background-color: red }");
@@ -193,6 +194,10 @@ void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
         ErrorMsg->setText(QString("Connected : No Error"));
         ErrorMsg->setStyleSheet("QLineEdit {background-color:green }");
     }
+
+    // update interval statistics
+    ForceSensor.GetPeriodStatistics(IntervalStatistics);
+    QMIntervalStatistics->SetValue(IntervalStatistics);
 }
 
 void mtsATINetFTQtWidget::SlotRebiasFTSensor(void)
