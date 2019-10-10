@@ -2,7 +2,7 @@
 # Author(s):  Preetham Chalasani
 # Created on: 2014-08-18
 #
-# (C) Copyright 2014-2016 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2014-2019 Johns Hopkins University (JHU), All Rights Reserved.
 #
 # --- begin cisst license - do not edit ---
 #
@@ -18,7 +18,6 @@ cmake_minimum_required (VERSION 2.8)
 
 set (REQUIRED_CISST_LIBRARIES
      cisstCommon
-     cisstCommonXML
      cisstVector
      cisstOSAbstraction
      cisstMultiTask
@@ -72,6 +71,12 @@ if (cisst_FOUND_AS_REQUIRED)
        code/mtsATINetFTSensor.cpp
        code/mtsATINetFTConfig.cpp
        )
+
+  if (CISST_HAS_XML)
+    set(REQUIRED_CISST_LIBRARIES ${REQUIRED_CISST_LIBRARIES} cisstCommonXML)
+  else (CISST_HAS_XML)
+    message ("Information: sawATIForceSensor compiled without XML support -- cannot use XML config files")
+  endif (CISST_HAS_XML)
 
   add_library (sawATIForceSensor ${HEADER_FILES} ${SOURCE_FILES})
   cisst_target_link_libraries (sawATIForceSensor ${REQUIRED_CISST_LIBRARIES})

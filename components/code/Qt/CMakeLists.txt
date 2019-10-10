@@ -1,6 +1,6 @@
 #
 #
-# (C) Copyright 2013-2014 Johns Hopkins University (JHU), All Rights
+# (C) Copyright 2013-2019 Johns Hopkins University (JHU), All Rights
 # Reserved.
 #
 # --- begin cisst license - do not edit ---
@@ -13,7 +13,6 @@
 
 set (REQUIRED_CISST_LIBRARIES
      cisstCommon
-     cisstCommonXML
      cisstVector
      cisstVectorQt
      cisstNumerical
@@ -31,6 +30,10 @@ if (cisst_FOUND_AS_REQUIRED)
 
   # cisst
   include (${CISST_USE_FILE})
+
+  if (CISST_HAS_XML)
+    set(REQUIRED_CISST_LIBRARIES ${REQUIRED_CISST_LIBRARIES} cisstCommonXML)
+  endif (CISST_HAS_XML)
 
   # for Qt generated header files
   include_directories (${CMAKE_CURRENT_BINARY_DIR})

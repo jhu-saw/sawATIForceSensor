@@ -5,7 +5,7 @@
   Author(s):  Preetham Chalasani
   Created on: 2013
 
-  (C) Copyright 2013-2014 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2013-2019 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -114,12 +114,14 @@ void mtsATINetFTSensor::Configure(const std::string & filename,
     }
 
     if(!filename.empty()) {
+        // Currently, this requires XML support (cisstCommonXML), but will return false
+        // if XML is not enabled.
         if (NetFTConfig.LoadCalibrationFile(filename)) {
             IsCalibFileLoaded = true;
             CMN_LOG_CLASS_RUN_WARNING << "Configure: file loaded - "
                                       << filename << std::endl;
+            CMN_LOG_CLASS_RUN_VERBOSE << "Force Ranges: " <<  NetFTConfig.GenInfo.MaxRatings << std::endl;
         }
-        CMN_LOG_CLASS_RUN_VERBOSE << "Force Ranges: " <<  NetFTConfig.GenInfo.MaxRatings << std::endl;
     }
 }
 

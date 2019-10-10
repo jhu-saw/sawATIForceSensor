@@ -5,7 +5,7 @@
   Author(s):  Preetham Chalasani
   Created on: 2013
 
-  (C) Copyright 2013-2014 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2013-2019 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -18,10 +18,13 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <sawATIForceSensor/mtsATINetFTConfig.h>
 
+#include <cisstConfig.h>
+#if CISST_HAS_XML
 #include <cisstCommon/cmnXMLPath.h>
 #include <cisstCommon/cmnPath.h>
 #include <cisstCommon/cmnUnits.h>
 #include <cisstVector/vctDynamicVectorTypes.h>
+#endif
 
 CMN_IMPLEMENT_SERVICES(mtsATINetFTConfig);
 
@@ -39,12 +42,12 @@ bool mtsATINetFTConfig::LoadCalibrationFile(const std::string & calFile)
         CMN_LOG_CLASS_RUN_WARNING << "LoadCalibrationFile: Parsing failed " << std::endl;
         return false;
     }
-
     return true;
 }
 
 bool mtsATINetFTConfig::ParseCalibrationFile(const std::string & calFile)
 {
+#if CISST_HAS_XML
     cmnXMLPath xmlPath;
     xmlPath.SetInputSource(calFile);
 
@@ -134,6 +137,10 @@ bool mtsATINetFTConfig::ParseCalibrationFile(const std::string & calFile)
     GenInfo.CountsPerTorque = atof(str.c_str());
 
     return true;
+#else
+    CMN_LOG_CLASS_RUN_WARNING << "ParseCalibrationFile: no XML support -- please enable cisstCommonXML" << std::endl;
+    return false;
+#endif
 }
 
 vct6 mtsATINetFTConfig::StrToVec(const std::string & strArray, char delim)
