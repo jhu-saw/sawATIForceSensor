@@ -22,12 +22,12 @@
 #include <cisstCommon/cmnCommandLineOptions.h>
 #include <cisstMultiTask/mtsQtApplication.h>
 #include <cisstMultiTask/mtsCollectorState.h>
+#include <cisstMultiTask/mtsManagerLocal.h>
 
 #include <sawTextToSpeech/mtsTextToSpeech.h>
 #include <sawATIForceSensor/mtsATINetFTSensor.h>
 #include <sawATIForceSensor/mtsATINetFTQtWidget.h>
 
-#include <cisstOSAbstraction.h>
 #include <QApplication>
 
 

@@ -21,6 +21,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstCommon/cmnCommandLineOptions.h>
 #include <cisstMultiTask/mtsQtApplication.h>
 #include <cisstMultiTask/mtsCollectorState.h>
+#include <cisstMultiTask/mtsManagerLocal.h>
 
 #include <sawTextToSpeech/mtsTextToSpeech.h>
 #include <sawATIForceSensor/mtsATINetFTSensor.h>
