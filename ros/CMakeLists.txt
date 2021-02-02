@@ -18,10 +18,8 @@ project (atinetft_ros)
 ## is used, also find other catkin packages
 find_package (catkin REQUIRED
               COMPONENTS
-              cisst_ros_bridge
-              geometry_msgs
+              cisst_ros_crtk
               roscpp
-              std_msgs
               roslib
               )
 
@@ -49,7 +47,7 @@ if (cisst_FOUND_AS_REQUIRED)
   file (MAKE_DIRECTORY "${CATKIN_DEVEL_PREFIX}/include")
 
   catkin_package (INCLUDE_DIRS "${CATKIN_DEVEL_PREFIX}/include"
-                  CATKIN_DEPENDS cisst_ros_bridge geometry_msgs roscpp std_msgs)
+                  CATKIN_DEPENDS cisst_ros_crtk roscpp roslib)
 
   # sawATIForceSensor has been compiled within cisst, we should find it automatically
   find_package (sawATIForceSensor)

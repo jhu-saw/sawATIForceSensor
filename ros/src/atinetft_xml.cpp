@@ -18,22 +18,28 @@ http://www.cisst.org/cisst/license.txt.
 */
 
 #include <cisstCommon/cmnCommandLineOptions.h>
-#include <cisstMultiTask/mtsQtApplication.h>
-#include <cisstMultiTask/mtsCollectorState.h>
-
+#include <cisstCommon/cmnQt.h>
+#include <cisstMultiTask/mtsTaskManager.h>
 #include <sawATIForceSensor/mtsATINetFTSensor.h>
 #include <sawATIForceSensor/mtsATINetFTQtWidget.h>
 
-#include <ros/ros.h>
-#include <cisst_ros_bridge/mtsROSBridge.h>
+#include <cisst_ros_crtk/mts_ros_crtk_bridge.h>
+
+#include <QApplication>
+
 
 int main(int argc, char ** argv)
 {
+    // log configuration
     cmnLogger::SetMask(CMN_LOG_ALLOW_ALL);
     cmnLogger::SetMaskDefaultLog(CMN_LOG_ALLOW_ALL);
     cmnLogger::SetMaskClass("mtsATINetFTSensor", CMN_LOG_ALLOW_ALL);
     cmnLogger::SetMaskFunction(CMN_LOG_ALLOW_ALL);
     cmnLogger::AddChannel(std::cerr, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
+
+    // create ROS node handle
+    ros::init(argc, argv, "atracsys", ros::init_options::AnonymousName);
+    ros::NodeHandle rosNodeHandle;
 
     // parse options
     cmnCommandLineOptions options;
@@ -42,10 +48,11 @@ int main(int argc, char ** argv)
     int customPort = 0;
     double socketTimeout = 10 * cmn_ms;
     double rosPeriod = 10.0 * cmn_ms;
+    std::list<std::string> managerConfig;
 
     options.AddOptionOneValue("c", "configuration",
                               "XML configuration file",
-                              cmnCommandLineOptions::REQUIRED_OPTION, &configFile);
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &configFile);
     options.AddOptionOneValue("i", "ftip",
                               "Force sensor IP address",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &ftip);
@@ -58,24 +65,27 @@ int main(int argc, char ** argv)
     options.AddOptionOneValue("t", "timeout",
                               "Socket send/receive timeout",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &socketTimeout);
+    options.AddOptionMultipleValues("m", "component-manager",
+                                    "JSON files to configure component manager",
+                                    cmnCommandLineOptions::OPTIONAL_OPTION, &managerConfig);
+    options.AddOptionNoValue("D", "dark-mode",
+                             "replaces the default Qt palette with darker colors");
 
+    // check that all required options have been provided
     std::string errorMessage;
     if (!options.Parse(argc, argv, errorMessage)) {
         std::cerr << "Error: " << errorMessage << std::endl;
         options.PrintUsage(std::cerr);
         return -1;
     }
+    std::string arguments;
+    options.PrintParsedArguments(arguments);
+    std::cout << "Options provided:" << std::endl << arguments << std::endl;
 
-    std::string processname = "ati-ft";
     mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
 
-    // create a Qt application and tab to hold all widgets
-    mtsQtApplication * qtAppTask = new mtsQtApplication("QtApplication", argc, argv);
-    qtAppTask->Configure();
-    componentManager->AddComponent(qtAppTask);
-
-    mtsATINetFTSensor * forceSensor = new mtsATINetFTSensor("ForceSensor");       // Continuous
-    forceSensor->SetIPAddress(ftip);      // IP address of the FT sensor
+    mtsATINetFTSensor * forceSensor = new mtsATINetFTSensor("ForceSensor");
+    forceSensor->SetIPAddress(ftip);
     if(customPort) {
         forceSensor->Configure(configFile, socketTimeout, customPort);
     } else {
@@ -83,34 +93,38 @@ int main(int argc, char ** argv)
     }
     componentManager->AddComponent(forceSensor);
 
+    // create a Qt user interface
+    QApplication application(argc, argv);
+    cmnQt::QApplicationExitsOnCtrlC();
+    if (options.IsSet("dark-mode")) {
+        cmnQt::SetDarkMode();
+    }
+
     mtsATINetFTQtWidget * forceSensorGUI = new mtsATINetFTQtWidget("ATINetFTGUI");
     componentManager->AddComponent(forceSensorGUI);
     componentManager->Connect("ATINetFTGUI", "RequiresATINetFTSensor",
                               "ForceSensor", "ProvidesATINetFTSensor");
 
-    // Ros Bridge
-    std::string bridgeName = "sawATIForceSensor";
-    mtsROSBridge * rosBridge = new mtsROSBridge(bridgeName,
-                                                rosPeriod, true);
-    // configure the bridge
-    rosBridge->AddPublisherFromCommandRead<prmForceCartesianGet, geometry_msgs::WrenchStamped>
-        (forceSensor->GetName(), "GetForceTorque", "wrench");
+    // ROS CRTK bridge
+    mts_ros_crtk_bridge * crtk_bridge
+        = new mts_ros_crtk_bridge("atracsys_crtk_bridge", &rosNodeHandle);
+    crtk_bridge->bridge_interface_provided(forceSensor->GetName(),
+                                           "ProvidesATINetFTSensor",
+                                           "", // ros sub namespace
+                                           rosPeriod);
+    componentManager->AddComponent(crtk_bridge);
+    crtk_bridge->Connect();
 
-    rosBridge->AddPublisherFromCommandRead<mtsDoubleVec, geometry_msgs::WrenchStamped>
-        (forceSensor->GetName(), "GetFTData", "raw_wrench");
+    // create and start all components
+    componentManager->CreateAllAndWait(5.0 * cmn_s);
+    componentManager->StartAllAndWait(5.0 * cmn_s);
 
-    componentManager->AddComponent(rosBridge);
-    componentManager->Connect(bridgeName, forceSensor->GetName(),
-                              forceSensor->GetName(), "ProvidesATINetFTSensor");
+    // run Qt user interface
+    forceSensorGUI->show();
+    application.exec();
 
-    componentManager->CreateAll();
-    componentManager->WaitForStateAll(mtsComponentState::READY);
-    componentManager->StartAll();
-    componentManager->WaitForStateAll(mtsComponentState::ACTIVE);
-
-    // kill all tasks and perform cleanup
-    componentManager->KillAll();
-    componentManager->WaitForStateAll(mtsComponentState::FINISHED, 2.0 * cmn_s);
+    // kill all components and perform cleanup
+    componentManager->KillAllAndWait(5.0 * cmn_s);
     componentManager->Cleanup();
 
     delete forceSensor;

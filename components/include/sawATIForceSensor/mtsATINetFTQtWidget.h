@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2013-08-24
 
-  (C) Copyright 2013-2014 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2013-2021 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -21,9 +21,8 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <cisstVector/vctForceTorqueQtWidget.h>
 #include <cisstMultiTask/mtsComponent.h>
-#include <cisstMultiTask/mtsVector.h>
 #include <cisstMultiTask/mtsQtWidgetIntervalStatistics.h>
-#include <cisstParameterTypes/prmPositionCartesianGet.h>
+#include <cisstParameterTypes/prmForceCartesianGet.h>
 
 #include <QWidget>
 #include <QtGui>
@@ -62,19 +61,20 @@ private:
 private:
     struct NetFTStruct {
         mtsFunctionVoid RebiasForceTorque;
-        mtsFunctionRead GetFTData;
+        mtsFunctionRead measured_cf;
         mtsFunctionRead GetPeriodStatistics;
         mtsFunctionRead GetIsConnected;
         mtsFunctionRead GetIsSaturated;
         mtsFunctionRead GetHasError;
 
-        mtsDoubleVec FTReadings;
         bool IsConnected;
         bool IsSaturated;
         bool HasError;
     } ForceSensor;
 
     mtsBool IsSaturated;
+
+    prmForceCartesianGet m_measured_cf;
 
     vctForceTorqueQtWidget * QFTWidget;
     QPushButton * RebiasButton;

@@ -18,15 +18,17 @@ http://www.cisst.org/cisst/license.txt.
 */
 
 #include <cisstCommon/cmnCommandLineOptions.h>
-#include <cisstMultiTask/mtsQtApplication.h>
-#include <cisstMultiTask/mtsCollectorState.h>
-#include <cisstMultiTask/mtsManagerLocal.h>
-
+#include <cisstCommon/cmnQt.h>
+#include <cisstMultiTask/mtsTaskManager.h>
 #include <sawATIForceSensor/mtsATINetFTSensor.h>
 #include <sawATIForceSensor/mtsATINetFTQtWidget.h>
 
+#include <QApplication>
+
+
 int main(int argc, char ** argv)
 {
+    // log configuration
     cmnLogger::SetMask(CMN_LOG_ALLOW_ALL);
     cmnLogger::SetMaskDefaultLog(CMN_LOG_ALLOW_ALL);
     cmnLogger::SetMaskClass("mtsATINetFTSensor", CMN_LOG_ALLOW_ALL);
@@ -35,63 +37,74 @@ int main(int argc, char ** argv)
 
     // parse options
     cmnCommandLineOptions options;
-    std::string gcmip = "-1";
     std::string configFile = "";
     std::string ftip = "192.168.1.8";
     int customPort = 0;
     double socketTimeout = 10 * cmn_ms;
+    std::list<std::string> managerConfig;
 
     options.AddOptionOneValue("c", "configuration",
                               "XML configuration file",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &configFile);
     options.AddOptionOneValue("i", "ftip",
                               "Force sensor IP address",
-                              cmnCommandLineOptions::REQUIRED_OPTION, &ftip);
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &ftip);
     options.AddOptionOneValue("p", "customPort",
                               "Custom Port Number",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &customPort);
     options.AddOptionOneValue("t", "timeout",
                               "Socket send/receive timeout",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &socketTimeout);
+    options.AddOptionMultipleValues("m", "component-manager",
+                                    "JSON files to configure component manager",
+                                    cmnCommandLineOptions::OPTIONAL_OPTION, &managerConfig);
+    options.AddOptionNoValue("D", "dark-mode",
+                             "replaces the default Qt palette with darker colors");
 
+    // check that all required options have been provided
     std::string errorMessage;
     if (!options.Parse(argc, argv, errorMessage)) {
         std::cerr << "Error: " << errorMessage << std::endl;
         options.PrintUsage(std::cerr);
         return -1;
     }
+    std::string arguments;
+    options.PrintParsedArguments(arguments);
+    std::cout << "Options provided:" << std::endl << arguments << std::endl;
 
-    std::string processname = "ati-ft";
-    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();    
+    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
 
-    // create a Qt application and tab to hold all widgets
-    mtsQtApplication * qtAppTask = new mtsQtApplication("QtApplication", argc, argv);
-    qtAppTask->Configure();
-    componentManager->AddComponent(qtAppTask);
-
-    mtsATINetFTSensor * forceSensor = new mtsATINetFTSensor("ForceSensor");       // Continuous
-    forceSensor->SetIPAddress(ftip);      // IP address of the FT sensor
+    mtsATINetFTSensor * forceSensor = new mtsATINetFTSensor("ForceSensor");
+    forceSensor->SetIPAddress(ftip);
     if(customPort) {
         forceSensor->Configure(configFile, socketTimeout, customPort);
     } else {
         forceSensor->Configure(configFile, socketTimeout);
     }
-
     componentManager->AddComponent(forceSensor);
+
+    // create a Qt user interface
+    QApplication application(argc, argv);
+    cmnQt::QApplicationExitsOnCtrlC();
+    if (options.IsSet("dark-mode")) {
+        cmnQt::SetDarkMode();
+    }
 
     mtsATINetFTQtWidget * forceSensorGUI = new mtsATINetFTQtWidget("ATINetFTGUI");
     componentManager->AddComponent(forceSensorGUI);
     componentManager->Connect("ATINetFTGUI", "RequiresATINetFTSensor",
                               "ForceSensor", "ProvidesATINetFTSensor");
 
-    componentManager->CreateAll();
-    componentManager->WaitForStateAll(mtsComponentState::READY);
-    componentManager->StartAll();
-    componentManager->WaitForStateAll(mtsComponentState::ACTIVE);
+    // create and start all components
+    componentManager->CreateAllAndWait(5.0 * cmn_s);
+    componentManager->StartAllAndWait(5.0 * cmn_s);
 
-    // kill all tasks and perform cleanup
-    componentManager->KillAll();
-    componentManager->WaitForStateAll(mtsComponentState::FINISHED, 2.0 * cmn_s);
+    // run Qt user interface
+    forceSensorGUI->show();
+    application.exec();
+
+    // kill all components and perform cleanup
+    componentManager->KillAllAndWait(5.0 * cmn_s);
     componentManager->Cleanup();
 
     delete forceSensor;

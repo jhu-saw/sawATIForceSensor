@@ -5,7 +5,7 @@
   Author(s):  Preetham Chalasani
   Created on: 2013
 
-  (C) Copyright 2013-2019 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2013-2021 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -66,18 +66,18 @@ mtsATINetFTSensor::mtsATINetFTSensor(const std::string & componentName):
     PercentOfMaxVec.SetSize(6);
     PercentOfMaxVec.Zeros();
 
-    StateTable.AddData(FTRawData    , "FTData");
-    StateTable.AddData(ForceTorque  , "ForceTorque");
-    StateTable.AddData(IsConnected  , "IsConnected");
-    StateTable.AddData(IsSaturated  , "IsSaturated");
-    StateTable.AddData(HasError     , "HasError");
-    StateTable.AddData(PercentOfMaxVec , "PercentOfMax");
+    StateTable.AddData(FTRawData, "FTData");
+    StateTable.AddData(ForceTorque, "ForceTorque");
+    StateTable.AddData(IsConnected, "IsConnected");
+    StateTable.AddData(IsSaturated, "IsSaturated");
+    StateTable.AddData(HasError, "HasError");
+    StateTable.AddData(PercentOfMaxVec, "PercentOfMax");
 
     mtsInterfaceProvided * interfaceProvided = AddInterfaceProvided("ProvidesATINetFTSensor");
     if (interfaceProvided) {
         interfaceProvided->AddCommandReadState(StateTable, StateTable.PeriodStats, "GetPeriodStatistics");
-        interfaceProvided->AddCommandReadState(StateTable, FTRawData, "GetFTData");
-        interfaceProvided->AddCommandReadState(StateTable, ForceTorque, "GetForceTorque");
+        interfaceProvided->AddCommandReadState(StateTable, FTRawData, "GetRawData");
+        interfaceProvided->AddCommandReadState(StateTable, ForceTorque, "measured_cf");
         interfaceProvided->AddCommandReadState(StateTable, IsConnected, "GetIsConnected");
         interfaceProvided->AddCommandReadState(StateTable, IsSaturated, "GetIsSaturated");
         interfaceProvided->AddCommandReadState(StateTable, PercentOfMaxVec, "GetPercentOfMax");
@@ -229,7 +229,7 @@ void mtsATINetFTSensor::GetReadingsFromCustomPort()
     int bytesRead;
     char buffer[512];
     double *packetReceived;
-    
+
     bytesRead = Socket.Receive(buffer, 56, SocketTimeout);
     if (bytesRead  > 0) {
         IsConnected = true;

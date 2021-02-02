@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2013-08-24
 
-  (C) Copyright 2013-2019 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2013-2021 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -42,12 +42,12 @@ mtsATINetFTQtWidget::mtsATINetFTQtWidget(const std::string & componentName, doub
     mtsInterfaceRequired * interfaceRequired;
     interfaceRequired = AddInterfaceRequired("RequiresATINetFTSensor");
     if(interfaceRequired) {
-        interfaceRequired->AddFunction("GetFTData"          , ForceSensor.GetFTData);
-        interfaceRequired->AddFunction("Rebias"             , ForceSensor.RebiasForceTorque);
+        interfaceRequired->AddFunction("measured_cf", ForceSensor.measured_cf);
+        interfaceRequired->AddFunction("Rebias", ForceSensor.RebiasForceTorque);
         interfaceRequired->AddFunction("GetPeriodStatistics", ForceSensor.GetPeriodStatistics);
-        interfaceRequired->AddFunction("GetIsConnected"     , ForceSensor.GetIsConnected);
-        interfaceRequired->AddFunction("GetIsSaturated"     , ForceSensor.GetIsSaturated);
-        interfaceRequired->AddFunction("GetHasError"        , ForceSensor.GetHasError);
+        interfaceRequired->AddFunction("GetIsConnected", ForceSensor.GetIsConnected);
+        interfaceRequired->AddFunction("GetIsSaturated", ForceSensor.GetIsSaturated);
+        interfaceRequired->AddFunction("GetHasError", ForceSensor.GetHasError);
     }
 
     setupUi();
@@ -167,14 +167,12 @@ void mtsATINetFTQtWidget::timerEvent(QTimerEvent * event)
     }
 
     mtsExecutionResult executionResult;
-    executionResult = ForceSensor.GetFTData(ForceSensor.FTReadings);
+    executionResult = ForceSensor.measured_cf(m_measured_cf);
     if (!executionResult) {
-        CMN_LOG_CLASS_RUN_ERROR << "ForceSensor.GetFTData failed, \""
+        CMN_LOG_CLASS_RUN_ERROR << "ForceSensor.measured_cf failed, \""
                                 << executionResult << "\"" << std::endl;
     }
-    QFTWidget->SetValue(ForceSensor.FTReadings.Ref(3, 0),
-                        ForceSensor.FTReadings.Ref(3, 3),
-                        ForceSensor.FTReadings.Timestamp());
+    QFTWidget->SetValue(m_measured_cf.F(), m_measured_cf.T(), m_measured_cf.Timestamp());
 
     // Update error state
     ForceSensor.GetIsConnected(ForceSensor.IsConnected);
