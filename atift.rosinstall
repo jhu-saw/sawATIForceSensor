@@ -15,10 +15,6 @@
     uri: https://github.com/collaborative-robotics/crtk_msgs
     version: master
 - git:
-    local-name: cisst-saw/sawTextToSpeech
-    uri: https://github.com/jhu-saw/sawTextToSpeech
-    version: devel
-- git:
     local-name: cisst-saw/sawATIForceSensor
     uri: https://github.com/jhu-saw/sawATIForceSensor
     version: devel
