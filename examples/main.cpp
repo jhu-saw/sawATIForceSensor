@@ -5,7 +5,7 @@
   Author(s):  Preetham Chalasani
   Created on: 2013
 
-  (C) Copyright 2013-2014 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2013-2021 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -17,13 +17,11 @@ http://www.cisst.org/cisst/license.txt.
 
 */
 
-//#include <stdlib.h>
 #include <cisstCommon/cmnCommandLineOptions.h>
 #include <cisstMultiTask/mtsQtApplication.h>
 #include <cisstMultiTask/mtsCollectorState.h>
 #include <cisstMultiTask/mtsManagerLocal.h>
 
-#include <sawTextToSpeech/mtsTextToSpeech.h>
 #include <sawATIForceSensor/mtsATINetFTSensor.h>
 #include <sawATIForceSensor/mtsATINetFTQtWidget.h>
 
@@ -31,7 +29,7 @@ int main(int argc, char ** argv)
 {
     cmnLogger::SetMask(CMN_LOG_ALLOW_ALL);
     cmnLogger::SetMaskDefaultLog(CMN_LOG_ALLOW_ALL);
-    cmnLogger::SetMaskClass("mtsATINetFT", CMN_LOG_ALLOW_ALL);
+    cmnLogger::SetMaskClass("mtsATINetFTSensor", CMN_LOG_ALLOW_ALL);
     cmnLogger::SetMaskFunction(CMN_LOG_ALLOW_ALL);
     cmnLogger::AddChannel(std::cerr, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
 
@@ -46,15 +44,12 @@ int main(int argc, char ** argv)
     options.AddOptionOneValue("c", "configuration",
                               "XML configuration file",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &configFile);
-
     options.AddOptionOneValue("i", "ftip",
                               "Force sensor IP address",
                               cmnCommandLineOptions::REQUIRED_OPTION, &ftip);
-
     options.AddOptionOneValue("p", "customPort",
                               "Custom Port Number",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &customPort);
-
     options.AddOptionOneValue("t", "timeout",
                               "Socket send/receive timeout",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &socketTimeout);
@@ -76,23 +71,16 @@ int main(int argc, char ** argv)
 
     mtsATINetFTSensor * forceSensor = new mtsATINetFTSensor("ForceSensor");       // Continuous
     forceSensor->SetIPAddress(ftip);      // IP address of the FT sensor
-    if(customPort)
+    if(customPort) {
         forceSensor->Configure(configFile, socketTimeout, customPort);
-    else
+    } else {
         forceSensor->Configure(configFile, socketTimeout);
+    }
 
     componentManager->AddComponent(forceSensor);
 
     mtsATINetFTQtWidget * forceSensorGUI = new mtsATINetFTQtWidget("ATINetFTGUI");
     componentManager->AddComponent(forceSensorGUI);
-
-    mtsTextToSpeech * textToSpeech = new mtsTextToSpeech;
-    textToSpeech->AddInterfaceRequiredForEventString("ErrorMsg", "ErrorMsg");
-    textToSpeech->SetPreemptive(true);
-    componentManager->AddComponent(textToSpeech);
-
-    componentManager->Connect(textToSpeech->GetName(), "ErrorMsg", "ForceSensor", "ProvidesATINetFTSensor");
-
     componentManager->Connect("ATINetFTGUI", "RequiresATINetFTSensor",
                               "ForceSensor", "ProvidesATINetFTSensor");
 

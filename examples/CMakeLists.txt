@@ -2,8 +2,7 @@
 # Author(s):  Preetham Chalasani
 # Created on: 2014-08-18
 #
-# (C) Copyright 2014-2016 Johns Hopkins University (JHU), All Rights
-# Reserved.
+# (C) Copyright 2014-2021 Johns Hopkins University (JHU), All Rights Reserved.
 #
 # --- begin cisst license - do not edit ---
 #
@@ -41,55 +40,43 @@ if (cisst_FOUND_AS_REQUIRED)
     set (EXECUTABLE_OUTPUT_PATH "${CATKIN_DEVEL_PREFIX}/bin")
   endif ()
 
-  find_package (sawTextToSpeech REQUIRED)
   find_package (sawATIForceSensor REQUIRED)
 
   if (sawATIForceSensor_FOUND)
 
     # sawATIForceSensor configuration
-    include_directories (${sawATIForceSensor_INCLUDE_DIR}
-                         ${sawTextToSpeech_INCLUDE_DIR})
-
-    link_directories (${sawATIForceSensor_LIBRARY_DIR}
-                      ${sawTextToSpeech_LIBRARY_DIR})
+    include_directories (${sawATIForceSensor_INCLUDE_DIR})
+    link_directories (${sawATIForceSensor_LIBRARY_DIR})
 
     if (CISST_HAS_QT)
       add_executable (sawATIForceSensorExample
-                      main.cpp
-                     )
+                      main.cpp)
 
       # link against non cisst libraries and cisst components
       target_link_libraries (sawATIForceSensorExample
-                             ${sawATIForceSensor_LIBRARIES}
-                             ${sawTextToSpeech_LIBRARIES})
+                             ${sawATIForceSensor_LIBRARIES})
 
       # link against cisst libraries (and dependencies)
       cisst_target_link_libraries (sawATIForceSensorExample ${REQUIRED_CISST_LIBRARIES})
       set_property (TARGET sawATIForceSensorExample PROPERTY FOLDER "sawATIForceSensor")
 
-      add_executable(sawATIForceSensorSimulator
-                     mainSimulator.cpp
-                     )
+      add_executable (sawATIForceSensorSimulator
+                      mainSimulator.cpp)
 
       # link against non cisst libraries and cisst components
       target_link_libraries (sawATIForceSensorSimulator
-                             ${sawATIForceSensor_LIBRARIES}
-                             ${sawTextToSpeech_LIBRARIES}
-                             )
+                             ${sawATIForceSensor_LIBRARIES})
 
       # link against cisst libraries (and dependencies)
       cisst_target_link_libraries (sawATIForceSensorSimulator ${REQUIRED_CISST_LIBRARIES})
       set_property (TARGET sawATIForceSensorSimulator PROPERTY FOLDER "sawATIForceSensor")
 
       add_executable (sawATIForceSensorWithSimulator
-                     mainForceWithSimulator.cpp
-                     )
+                      mainForceWithSimulator.cpp)
 
       # link against non cisst libraries and cisst components
       target_link_libraries (sawATIForceSensorWithSimulator
-                            ${sawATIForceSensor_LIBRARIES}
-                            ${sawTextToSpeech_LIBRARIES}
-                            )
+                            ${sawATIForceSensor_LIBRARIES})
 
       # link against cisst libraries (and dependencies)
       cisst_target_link_libraries (sawATIForceSensorWithSimulator ${REQUIRED_CISST_LIBRARIES})

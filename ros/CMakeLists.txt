@@ -1,5 +1,5 @@
 #
-# (C) Copyright 2015-2016 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2015-2021 Johns Hopkins University (JHU), All Rights Reserved.
 #
 # --- begin cisst license - do not edit ---
 #
@@ -51,22 +51,19 @@ if (cisst_FOUND_AS_REQUIRED)
   catkin_package (INCLUDE_DIRS "${CATKIN_DEVEL_PREFIX}/include"
                   CATKIN_DEPENDS cisst_ros_bridge geometry_msgs roscpp std_msgs)
 
-  # sawAtracsysFusionTrack has been compiled within cisst, we should find it automatically
-  find_package (sawTextToSpeech REQUIRED)
+  # sawATIForceSensor has been compiled within cisst, we should find it automatically
   find_package (sawATIForceSensor)
 
   if (sawATIForceSensor_FOUND)
 
     include_directories (${CATKIN_DEVEL_PREFIX}/include
-                         ${sawATIForceSensor_INCLUDE_DIR}
-                         ${sawTextToSpeech_INCLUDE_DIR})
+                         ${sawATIForceSensor_INCLUDE_DIR})
 
     link_directories (${sawATIForceSensor_LIBRARY_DIR} ${sawTextToSpeech_LIBRARY_DIR})
 
     add_executable (atinetft_xml src/atinetft_xml.cpp)
     target_link_libraries (atinetft_xml
                            ${sawATIForceSensor_LIBRARIES}
-                           ${sawTextToSpeech_LIBRARIES}
                            ${catkin_LIBRARIES})
     cisst_target_link_libraries (atinetft_xml ${REQUIRED_CISST_LIBRARIES})
 
