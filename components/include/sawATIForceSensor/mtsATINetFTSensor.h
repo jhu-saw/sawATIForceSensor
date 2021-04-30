@@ -19,6 +19,7 @@ http://www.cisst.org/cisst/license.txt.
 #ifndef _mtsATINetFTSensor_h
 #define _mtsATINetFTSensor_h
 
+#include <cisstCommon/cmnUnits.h>
 #include <cisstOSAbstraction/osaSocket.h>
 #include <cisstMultiTask/mtsTaskContinuous.h>
 #include <cisstMultiTask/mtsVector.h>
