@@ -2,9 +2,10 @@
 
 This SAW component contains code for interfacing with the network based ATI force sensors.  It compiles on Windows and Linux.  It has been tested with:
   * Linux Ubuntu 16.04, 18.04 and 20.04 and Windows
-  * ATI Nano/Gamma with *Net Box*
+  * ATI Nano/Gamma/Sigma with *Net Box*
 
 The `ros` folder contains code for a ROS node that interfaces with the sawATIForceSensor component and publishes the measured wrench (`measured_cf`).  To build the ROS node, make sure you use `catkin build`.
+
 
 # Links
  * License: http://github.com/jhu-cisst/cisst/blob/master/license.txt
@@ -79,15 +80,16 @@ Once the node is started AND connected, the following ROS topic should appear:
 Or, if you have specified a namespace:
 ```sh
 /force_sensor_A/measured_cf
+```
 
 ### ROS CRTK Python and Matlab client
 
 Once you have the ATI Force Sensor ROS node working, you can create your own ROS subscriber in different languages, including C++, Python, Matlab...  If you want to use Python or Matlab, the CRTK client libraries might be useful:
-* [CRTK Python]()
-* [CRTK Matlab]()
+* [CRTK Python](https://github.com/collaborative-robotics/crtk_python_client)
+* [CRTK Matlab](https://github.com/collaborative-robotics/crtk_matlab_client)
 
-## Misc.
+## Other "middleware"
 
 Besides ROS, the ATI Force Sensor component can also stream data to your application using the *sawOpenIGTLink* or *sawSocketStreamer* components.  See:
-* [sawOpenIGTLink]()
-* [sawSocketStreamer]()
+* [sawOpenIGTLink](https://github.com/jhu-saw/sawOpenIGTLink)
+* [sawSocketStreamer](https://github.com/jhu-saw/sawSocketStreamer)
