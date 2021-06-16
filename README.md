@@ -69,7 +69,7 @@ rosrun atinetft_ros atinetft_xml -i 192.168.0.2
 
 If you have more than one force sensor, you can start the node with a ROS namespace using (you can use your own namespace after `__ns:=`):
 ```sh
-rosrun atinetft_ros atinetft_xml -i 192.168.0.2 __ns:=force_sensor_A 
+rosrun atinetft_ros atinetft_xml -i 192.168.0.2 __ns:=force_sensor_A
 ```
 
 Once the node is started AND connected, the following ROS topic should appear:
