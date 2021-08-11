@@ -1,6 +1,6 @@
 <package>
   <name>saw_ati_force_sensor</name>
-  <version>1.4.0</version>
+  <version>2.0.0</version>
   <description>
   sawATIForceSensor
   </description>
@@ -13,7 +13,7 @@
 
   <run_depend>cisst_netlib</run_depend>
   <run_depend>cisst</run_depend>
-  
+
   <export>
     <build_type>catkin</build_type>
   </export>
