@@ -49,8 +49,8 @@ if (cisst_FOUND_AS_REQUIRED)
   set (sawATIForceSensor_LIBRARIES sawATIForceSensor)
 
   # Set the version number
-  set (sawATIForceSensor_VERSION_MAJOR "1")
-  set (sawATIForceSensor_VERSION_MINOR "4")
+  set (sawATIForceSensor_VERSION_MAJOR "2")
+  set (sawATIForceSensor_VERSION_MINOR "0")
   set (sawATIForceSensor_VERSION_PATCH "0")
   set (sawATIForceSensor_VERSION "${sawATIForceSensor_VERSION_MAJOR}.${sawATIForceSensor_VERSION_MINOR}.${sawATIForceSensor_VERSION_PATCH}")
 

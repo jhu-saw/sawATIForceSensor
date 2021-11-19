@@ -39,7 +39,7 @@ int main(int argc, char ** argv)
     cmnLogger::AddChannel(std::cerr, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
 
     // create ROS node handle
-    ros::init(argc, argv, "atracsys", ros::init_options::AnonymousName);
+    ros::init(argc, argv, "atift", ros::init_options::AnonymousName);
     ros::NodeHandle rosNodeHandle;
 
     // parse options
@@ -108,7 +108,7 @@ int main(int argc, char ** argv)
 
     // ROS CRTK bridge
     mts_ros_crtk_bridge_provided * crtk_bridge
-        = new mts_ros_crtk_bridge_provided("atracsys_crtk_bridge", &rosNodeHandle);
+        = new mts_ros_crtk_bridge_provided("atift_crtk_bridge", &rosNodeHandle);
     crtk_bridge->bridge_interface_provided(forceSensor->GetName(),
                                            "ProvidesATINetFTSensor",
                                            "", // ros sub namespace
