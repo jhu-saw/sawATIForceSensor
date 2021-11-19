@@ -23,7 +23,8 @@ http://www.cisst.org/cisst/license.txt.
 #include <sawATIForceSensor/mtsATINetFTSensor.h>
 #include <sawATIForceSensor/mtsATINetFTQtWidget.h>
 
-#include <cisst_ros_crtk/mts_ros_crtk_bridge.h>
+#include <ros/ros.h>
+#include <cisst_ros_crtk/mts_ros_crtk_bridge_provided.h>
 
 #include <QApplication>
 
@@ -106,8 +107,8 @@ int main(int argc, char ** argv)
                               "ForceSensor", "ProvidesATINetFTSensor");
 
     // ROS CRTK bridge
-    mts_ros_crtk_bridge * crtk_bridge
-        = new mts_ros_crtk_bridge("atracsys_crtk_bridge", &rosNodeHandle);
+    mts_ros_crtk_bridge_provided * crtk_bridge
+        = new mts_ros_crtk_bridge_provided("atracsys_crtk_bridge", &rosNodeHandle);
     crtk_bridge->bridge_interface_provided(forceSensor->GetName(),
                                            "ProvidesATINetFTSensor",
                                            "", // ros sub namespace
