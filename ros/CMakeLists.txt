@@ -9,9 +9,9 @@
 #
 # --- end cisst license ---
 
-cmake_minimum_required (VERSION 2.8.3)
+cmake_minimum_required (VERSION 3.10)
 
-project (atinetft_ros)
+project (atinetft_ros VERSION 2.0.0)
 
 ## find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
