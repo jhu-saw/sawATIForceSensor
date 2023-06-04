@@ -5,7 +5,7 @@
   Author(s):  Preetham Chalasani
   Created on: 2013
 
-  (C) Copyright 2013-2021 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2013-2023 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -73,10 +73,7 @@ int main(int argc, char ** argv)
                              "replaces the default Qt palette with darker colors");
 
     // check that all required options have been provided
-    std::string errorMessage;
-    if (!options.Parse(argc, argv, errorMessage)) {
-        std::cerr << "Error: " << errorMessage << std::endl;
-        options.PrintUsage(std::cerr);
+    if (!options.Parse(argc, argv, std::cerr)) {
         return -1;
     }
     std::string arguments;
@@ -115,6 +112,12 @@ int main(int argc, char ** argv)
                                            rosPeriod);
     componentManager->AddComponent(crtk_bridge);
     crtk_bridge->Connect();
+
+    // custom user component
+    if (!componentManager->ConfigureJSON(managerConfig)) {
+        CMN_LOG_INIT_ERROR << "Configure: failed to configure component-manager, check cisstLog for error messages" << std::endl;
+        return -1;
+    }
 
     // create and start all components
     componentManager->CreateAllAndWait(5.0 * cmn_s);
