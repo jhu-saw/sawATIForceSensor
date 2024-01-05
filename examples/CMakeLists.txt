@@ -2,7 +2,7 @@
 # Author(s):  Preetham Chalasani
 # Created on: 2014-08-18
 #
-# (C) Copyright 2014-2021 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2014-2023 Johns Hopkins University (JHU), All Rights Reserved.
 #
 # --- begin cisst license - do not edit ---
 #
@@ -12,9 +12,8 @@
 #
 # --- end cisst license ---
 
-project (sawATIForceSensorExamples)
-
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required (VERSION 3.10)
+project (sawATIForceSensorExamples VERSION 2.2.0)
 
 # create a list of libraries needed for this project
 set (REQUIRED_CISST_LIBRARIES
@@ -36,10 +35,7 @@ if (cisst_FOUND_AS_REQUIRED)
   include (${CISST_USE_FILE})
 
   # catkin/ROS paths
-  cisst_is_catkin_build (sawATIForceSensorExamples_IS_CATKIN_BUILT)
-  if (sawATIForceSensorExamples_IS_CATKIN_BUILT)
-    set (EXECUTABLE_OUTPUT_PATH "${CATKIN_DEVEL_PREFIX}/bin")
-  endif ()
+  cisst_set_output_path ()
 
   find_package (sawATIForceSensor REQUIRED)
 
@@ -50,39 +46,46 @@ if (cisst_FOUND_AS_REQUIRED)
     link_directories (${sawATIForceSensor_LIBRARY_DIR})
 
     if (CISST_HAS_QT)
+
+      # 1
       add_executable (sawATIForceSensorExample
                       main.cpp)
-
       # link against non cisst libraries and cisst components
       target_link_libraries (sawATIForceSensorExample
                              ${sawATIForceSensor_LIBRARIES})
-
       # link against cisst libraries (and dependencies)
       cisst_target_link_libraries (sawATIForceSensorExample ${REQUIRED_CISST_LIBRARIES})
-      set_property (TARGET sawATIForceSensorExample PROPERTY FOLDER "sawATIForceSensor")
+      set_target_properties (sawATIForceSensorExample PROPERTIES
+                             FOLDER "sawATIForceSensor")
 
+      # 2
       add_executable (sawATIForceSensorSimulator
                       mainSimulator.cpp)
-
       # link against non cisst libraries and cisst components
       target_link_libraries (sawATIForceSensorSimulator
                              ${sawATIForceSensor_LIBRARIES})
-
       # link against cisst libraries (and dependencies)
       cisst_target_link_libraries (sawATIForceSensorSimulator ${REQUIRED_CISST_LIBRARIES})
-      set_property (TARGET sawATIForceSensorSimulator PROPERTY FOLDER "sawATIForceSensor")
+      set_target_properties (sawATIForceSensorSimulator PROPERTIES
+                             FOLDER "sawATIForceSensor")
 
+      # 3
       add_executable (sawATIForceSensorWithSimulator
                       mainForceWithSimulator.cpp)
-
       # link against non cisst libraries and cisst components
       target_link_libraries (sawATIForceSensorWithSimulator
                             ${sawATIForceSensor_LIBRARIES})
-
       # link against cisst libraries (and dependencies)
       cisst_target_link_libraries (sawATIForceSensorWithSimulator ${REQUIRED_CISST_LIBRARIES})
-      set_property (TARGET sawATIForceSensorWithSimulator PROPERTY FOLDER "sawATIForceSensor")
+      set_target_properties (sawATIForceSensorWithSimulator PROPERTIES
+                             FOLDER "sawATIForceSensor")
 
+
+      install (TARGETS sawATIForceSensorExample sawATIForceSensorSimulator sawATIForceSensorWithSimulator
+	COMPONENT sawATIForceSensor-Examples
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
 
     endif (CISST_HAS_QT)
 

@@ -12,9 +12,8 @@
 #
 # --- end cisst license ---
 
-project (sawATIForceSensor)
-
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.10)
+project (sawATIForceSensor VERSION 2.0.0)
 
 set (REQUIRED_CISST_LIBRARIES
      cisstCommon
@@ -32,14 +31,7 @@ if (cisst_FOUND_AS_REQUIRED)
   include (${CISST_USE_FILE})
 
   # catkin/ROS paths
-  cisst_is_catkin_build (sawATIForceSensor_IS_CATKIN_BUILT)
-  if (sawATIForceSensor_IS_CATKIN_BUILT)
-    set (sawATIForceSensor_CONFIG_FILE_DIR
-         "${CATKIN_DEVEL_PREFIX}/share/sawATIForceSensor/cmake")
-    set (LIBRARY_OUTPUT_PATH "${sawATIForceSensor_BINARY_DIR}/lib")
-  else ()
-    set (sawATIForceSensor_CONFIG_FILE_DIR "${sawATIForceSensor_BINARY_DIR}")
-  endif ()
+  cisst_set_output_path ()
 
   # create/configure file for find_package (sawATIForceSensor)
   set (sawATIForceSensor_INCLUDE_DIR
@@ -48,17 +40,7 @@ if (cisst_FOUND_AS_REQUIRED)
   set (sawATIForceSensor_LIBRARY_DIR "${LIBRARY_OUTPUT_PATH}")
   set (sawATIForceSensor_LIBRARIES sawATIForceSensor)
 
-  # Set the version number
-  set (sawATIForceSensor_VERSION_MAJOR "2")
-  set (sawATIForceSensor_VERSION_MINOR "0")
-  set (sawATIForceSensor_VERSION_PATCH "0")
-  set (sawATIForceSensor_VERSION "${sawATIForceSensor_VERSION_MAJOR}.${sawATIForceSensor_VERSION_MINOR}.${sawATIForceSensor_VERSION_PATCH}")
-
-  # Generate sawATIForceSensorRevision.h
-  configure_file ("${sawATIForceSensor_SOURCE_DIR}/code/sawATIForceSensorRevision.h.in"
-                  "${sawATIForceSensor_BINARY_DIR}/include/sawATIForceSensor/sawATIForceSensorRevision.h")
-
-  include_directories (${sawATIForceSensor_INCLUDE_DIR})
+  include_directories (BEFORE ${sawATIForceSensor_INCLUDE_DIR})
   set (sawATIForceSensor_HEADER_DIR "${sawATIForceSensor_SOURCE_DIR}/include/sawATIForceSensor")
 
   set (HEADER_FILES
@@ -79,8 +61,12 @@ if (cisst_FOUND_AS_REQUIRED)
   endif (CISST_HAS_XML)
 
   add_library (sawATIForceSensor ${HEADER_FILES} ${SOURCE_FILES})
+
+  set_target_properties (sawATIForceSensor PROPERTIES
+                         VERSION ${sawATIForceSensor_VERSION}
+                         FOLDER "sawATIForceSensor")
+
   cisst_target_link_libraries (sawATIForceSensor ${REQUIRED_CISST_LIBRARIES})
-  set_property (TARGET sawATIForceSensor PROPERTY FOLDER "sawATIForceSensor")
 
   # add Qt code
   if (CISST_HAS_QT)
@@ -88,31 +74,22 @@ if (cisst_FOUND_AS_REQUIRED)
     set (sawATIForceSensor_LIBRARIES ${sawATIForceSensor_LIBRARIES} ${sawATIForceSensorQt_LIBRARIES})
   endif (CISST_HAS_QT)
 
-  set (sawATIForceSensor_CMAKE_CONFIG_FILE
-       "${sawATIForceSensor_CONFIG_FILE_DIR}/sawATIForceSensorConfig.cmake")
-
-  configure_file ("${CMAKE_CURRENT_SOURCE_DIR}/cmake/sawATIForceSensorConfig.cmake.in"
-                  "${sawATIForceSensor_CMAKE_CONFIG_FILE}"
-                  @ONLY)
-
-  cisst_add_config_version ("${sawATIForceSensor_CONFIG_FILE_DIR}/sawATIForceSensorConfigVersion.cmake"
-                            VERSION ${sawATIForceSensor_VERSION}
-                            DESTINATION ${CISST_CMAKE_INSTALL_SUFFIX}/saw
-                            COMPONENT sawATIForceSensor)
+  # add all config files for this component
+  cisst_add_config_files (sawATIForceSensor)
 
   # Install targets for headers and library
   install (DIRECTORY
-           "${sawATIForceSensor_INCLUDE_DIR}/sawATIForceSensor"
+           "${sawATIForceSensor_SOURCE_DIR}/include/sawATIForceSensor"
            "${sawATIForceSensor_BINARY_DIR}/include/sawATIForceSensor"
            DESTINATION include
+	   COMPONENT sawATIForceSensor-dev
            PATTERN .svn EXCLUDE)
 
-  install (TARGETS sawATIForceSensor
+  install (TARGETS sawATIForceSensor COMPONENT sawATIForceSensor
            RUNTIME DESTINATION bin
            LIBRARY DESTINATION lib
            ARCHIVE DESTINATION lib)
 
-  install (FILES "${sawATIForceSensor_CMAKE_CONFIG_FILE}"
-           DESTINATION "share/sawATIForceSensor")
-
+else (cisst_FOUND_AS_REQUIRED)
+  message ("Information: code in ${CMAKE_CURRENT_SOURCE_DIR} will not be compiled, it requires ${REQUIRED_CISST_LIBRARIES}")
 endif (cisst_FOUND_AS_REQUIRED)

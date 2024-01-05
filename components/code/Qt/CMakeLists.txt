@@ -1,7 +1,5 @@
 #
-#
-# (C) Copyright 2013-2019 Johns Hopkins University (JHU), All Rights
-# Reserved.
+# (C) Copyright 2013-2023 Johns Hopkins University (JHU), All Rights Reserved.
 #
 # --- begin cisst license - do not edit ---
 #
@@ -49,16 +47,23 @@ if (cisst_FOUND_AS_REQUIRED)
   add_library(sawATIForceSensorQt
                ${sawATIForceSensor_HEADER_DIR}/sawATIForceSensorQtExport.h
                ${sawATIForceSensor_HEADER_DIR}/mtsATINetFTQtWidget.h
-               ${sawATIForceSensor_HEADER_DIR}/sawATINetFTSimulatorQtWidget.h                              
+               ${sawATIForceSensor_HEADER_DIR}/sawATINetFTSimulatorQtWidget.h
 
                mtsATINetFTQtWidget.cpp
                sawATINetFTSimulatorQtWidget.cpp
                ${SAW_ATINETFT_QT_WRAP_CPP})
-  set_property(TARGET sawATIForceSensorQt PROPERTY FOLDER "sawATIForceSensor") 
+  set_target_properties (sawATIForceSensorQt PROPERTIES
+                         VERSION ${sawATIForceSensor_VERSION}
+                         FOLDER "sawATIForceSensor")
   cisst_target_link_libraries(sawATIForceSensorQt ${REQUIRED_CISST_LIBRARIES})
 
   # make sure the new library is known by the parent folder to add to the config file
   set (sawATIForceSensorQt_LIBRARIES sawATIForceSensorQt PARENT_SCOPE)
+
+  install (TARGETS sawATIForceSensorQt COMPONENT sawATIForceSensor-Qt
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib)
 
 else (cisst_FOUND_AS_REQUIRED)
   message ("Information: code will not be compiled, it requires ${REQUIRED_CISST_LIBRARIES}")

@@ -21,7 +21,7 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <cisstVector/vctForceTorqueQtWidget.h>
 #include <cisstMultiTask/mtsComponent.h>
-#include <cisstMultiTask/mtsQtWidgetIntervalStatistics.h>
+#include <cisstMultiTask/mtsIntervalStatisticsQtWidget.h>
 #include <cisstParameterTypes/prmForceCartesianGet.h>
 
 #include <QWidget>
@@ -87,7 +87,7 @@ private:
 
     // Timing
     mtsIntervalStatistics IntervalStatistics;
-    mtsQtWidgetIntervalStatistics * QMIntervalStatistics;
+    mtsIntervalStatisticsQtWidget * QMIntervalStatistics;
 
 private slots:
     void timerEvent(QTimerEvent * event);

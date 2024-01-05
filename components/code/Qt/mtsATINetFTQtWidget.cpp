@@ -135,7 +135,7 @@ void mtsATINetFTQtWidget::setupUi()
 
     //--- Tab 2
     QVBoxLayout * tab2Layout = new QVBoxLayout;
-    QMIntervalStatistics = new mtsQtWidgetIntervalStatistics();
+    QMIntervalStatistics = new mtsIntervalStatisticsQtWidget();
     tab2Layout->addWidget(QMIntervalStatistics);
     tab2Layout->addStretch();
 
