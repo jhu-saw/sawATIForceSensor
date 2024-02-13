@@ -23,7 +23,6 @@ http://www.cisst.org/cisst/license.txt.
 #include <sawATIForceSensor/mtsATINetFTSensor.h>
 #include <sawATIForceSensor/mtsATINetFTQtWidget.h>
 
-#include <ros/ros.h>
 #include <cisst_ros_crtk/mts_ros_crtk_bridge_provided.h>
 
 #include <QApplication>
@@ -39,8 +38,8 @@ int main(int argc, char ** argv)
     cmnLogger::AddChannel(std::cerr, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
 
     // create ROS node handle
-    ros::init(argc, argv, "atift", ros::init_options::AnonymousName);
-    ros::NodeHandle rosNodeHandle;
+    cisst_ral::ral ral(argc, argv, "ati_ft");
+    auto rosNode = ral.node();
 
     // parse options
     cmnCommandLineOptions options;
@@ -73,7 +72,7 @@ int main(int argc, char ** argv)
                              "replaces the default Qt palette with darker colors");
 
     // check that all required options have been provided
-    if (!options.Parse(argc, argv, std::cerr)) {
+    if (!options.Parse(ral.stripped_arguments(), std::cerr)) {
         return -1;
     }
     std::string arguments;
@@ -105,7 +104,7 @@ int main(int argc, char ** argv)
 
     // ROS CRTK bridge
     mts_ros_crtk_bridge_provided * crtk_bridge
-        = new mts_ros_crtk_bridge_provided("atift_crtk_bridge", &rosNodeHandle);
+        = new mts_ros_crtk_bridge_provided("atift_crtk_bridge", rosNode);
     crtk_bridge->bridge_interface_provided(forceSensor->GetName(),
                                            "ProvidesATINetFTSensor",
                                            "", // ros sub namespace
@@ -127,13 +126,17 @@ int main(int argc, char ** argv)
     forceSensorGUI->show();
     application.exec();
 
+    // stop all logs
+    cmnLogger::Kill();
+
+    // stop ROS node
+    cisst_ral::shutdown();
+
     // kill all components and perform cleanup
     componentManager->KillAllAndWait(5.0 * cmn_s);
     componentManager->Cleanup();
 
     delete forceSensor;
-
-    cmnLogger::Kill();
 
     return 0;
 }

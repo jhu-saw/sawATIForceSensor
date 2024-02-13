@@ -1,5 +1,5 @@
 #
-# (C) Copyright 2015-2023 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2015-2024 Johns Hopkins University (JHU), All Rights Reserved.
 #
 # --- begin cisst license - do not edit ---
 #
@@ -10,60 +10,93 @@
 # --- end cisst license ---
 
 cmake_minimum_required (VERSION 3.10)
+project (ati_ft VERSION 2.0.0)
 
-project (atinetft_ros VERSION 2.0.0)
+# first test for ROS1
+set (ROS1_depends cisst_ros_crtk roscpp roslib)
 
-## find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
-find_package (catkin REQUIRED
-              COMPONENTS
-              cisst_ros_crtk
-              roscpp
-              roslib
-              )
+find_package (catkin QUIET
+  COMPONENTS
+  ${ROS1_depends})
+
+# ROS 1
+if (catkin_FOUND)
+  set (ROS_VERSION 1)
+  catkin_package (CATKIN_DEPENDS ${ROS1_depends})
+  include_directories (${catkin_INCLUDE_DIRS})
+else (catkin_FOUND)
+
+  # look for ROS2
+  find_package (ament_cmake QUIET)
+  if (ament_cmake_FOUND)
+    set (ROS_VERSION 2)
+    set (ROS2_depends rclcpp
+      std_msgs std_srvs
+      geometry_msgs sensor_msgs diagnostic_msgs
+      tf2_ros tf2_msgs
+      cisst_msgs crtk_msgs
+      cisst_ros_bridge cisst_ros_crtk
+      )
+    foreach (_dep ${ROS2_depends})
+      find_package (${_dep} REQUIRED)
+    endforeach ()
+
+  endif (ament_cmake_FOUND)
+endif (catkin_FOUND)
+
+# create a list of required cisst libraries
+set (REQUIRED_CISST_LIBRARIES
+  cisstCommon
+  cisstCommonQt
+  cisstVector
+  cisstVectorQt
+  cisstOSAbstraction
+  cisstMultiTask
+  cisstMultiTaskQt
+  cisstParameterTypes
+  cisstQt)
 
 # find cisst and make sure the required libraries have been compiled
-set (REQUIRED_CISST_LIBRARIES
-     cisstCommon
-     cisstCommonQt
-     cisstVector
-     cisstVectorQt
-     cisstOSAbstraction
-     cisstMultiTask
-     cisstMultiTaskQt
-     cisstParameterTypes
-     cisstQt)
-
 find_package (cisst 1.2.0 REQUIRED ${REQUIRED_CISST_LIBRARIES})
 
 if (cisst_FOUND_AS_REQUIRED)
 
+  # load cisst configuration
   include (${CISST_USE_FILE})
 
-  # include_directories(include)
-  include_directories (${catkin_INCLUDE_DIRS})
-
-  file (MAKE_DIRECTORY "${CATKIN_DEVEL_PREFIX}/include")
-
-  catkin_package (INCLUDE_DIRS "${CATKIN_DEVEL_PREFIX}/include"
-                  CATKIN_DEPENDS cisst_ros_crtk roscpp roslib)
+  # set paths
+  cisst_set_output_path ()
 
   # sawATIForceSensor has been compiled within cisst, we should find it automatically
   find_package (sawATIForceSensor)
 
   if (sawATIForceSensor_FOUND)
 
+    # sawATIForceSensor configuration
     include_directories (${CATKIN_DEVEL_PREFIX}/include
                          ${sawATIForceSensor_INCLUDE_DIR})
 
-    link_directories (${sawATIForceSensor_LIBRARY_DIR} ${sawTextToSpeech_LIBRARY_DIR})
+    link_directories (${sawATIForceSensor_LIBRARY_DIR})
 
-    add_executable (atinetft_xml src/atinetft_xml.cpp)
-    target_link_libraries (atinetft_xml
-                           ${sawATIForceSensor_LIBRARIES}
-                           ${catkin_LIBRARIES})
-    cisst_target_link_libraries (atinetft_xml ${REQUIRED_CISST_LIBRARIES})
+    add_executable (ati_ft src/ati_ft.cpp)
+    target_link_libraries (ati_ft
+      ${sawATIForceSensor_LIBRARIES}
+      ${catkin_LIBRARIES})
+    cisst_target_link_libraries (ati_ft ${REQUIRED_CISST_LIBRARIES})
+
+    install (TARGETS ati_ft
+      LIBRARY DESTINATION lib/${PROJECT_NAME}
+      RUNTIME DESTINATION lib/${PROJECT_NAME}
+      LIBRARY DESTINATION lib
+      INCLUDES DESTINATION include)
+    
+    if (ROS_VERSION EQUAL 2)
+      ament_target_dependencies (
+        ati_ft
+        ${ROS2_depends}
+        )
+      ament_package ()
+    endif ()
 
   else (sawATIForceSensor_FOUND)
     message ("Information: code in ${CMAKE_CURRENT_SOURCE_DIR} will not be compiled, it requires sawATIForceSensor")

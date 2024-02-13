@@ -1,0 +1,4 @@
+{
+  "name": "ati_ft",
+  "dependencies": ["cisst_ros_crtk", "sawATIForceSensorCore"]
+}

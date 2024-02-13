@@ -1,0 +1,4 @@
+{
+  "name": "sawATIForceSensorCore",
+  "dependencies": ["cisst"]
+}
