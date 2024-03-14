@@ -22,7 +22,7 @@ The `ros` folder contains code for a ROS node that interfaces with the sawATIFor
 
 This code is part of the cisst-SAW libraries and components.  Once the drivers are installed, you can follow the *cisst-SAW* compilation instructions: https://github.com/jhu-cisst/cisst/wiki/Compiling-cisst-and-SAW-with-CMake.
 
-For Linux users, we strongly recommend to compile with ROS (1 or 2).  See See https://github.com/jhu-saw/vcs for download and build instructions.  Use the VCS files for `ati-ft`.
+For Linux users, we strongly recommend to compile with ROS (1 or 2).  See https://github.com/jhu-saw/vcs for download and build instructions.  Use the VCS files for `ati-ft`.
 
 ## Main example
 
