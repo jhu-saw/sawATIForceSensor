@@ -1,5 +1,5 @@
 #
-# (C) Copyright 2014-2024 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2014-2026 Johns Hopkins University (JHU), All Rights Reserved.
 #
 # --- begin cisst license - do not edit ---
 #
@@ -20,12 +20,16 @@ cisst_cpack_settings (
 
 add_subdirectory (components)
 
-set (sawATIForceSensor_DIR "${sawATIForceSensorCore_BINARY_DIR}/components")
-add_subdirectory (examples)
+if (CISST_HAS_QT)
+  set (sawATIForceSensor_DIR "${sawATIForceSensorCore_BINARY_DIR}/components")
+  add_subdirectory (examples)
+endif ()
 
 include (CPack)
 cpack_add_component (sawATIForceSensor)
 cpack_add_component (sawATIForceSensor-dev
                      DEPENDS sawATIForceSensor)
-cpack_add_component (sawATIForceSensor-Examples
-                     DEPENDS sawATIForceSensor)
+if (CISST_HAS_QT)
+  cpack_add_component (sawATIForceSensor-Examples
+                       DEPENDS sawATIForceSensor)
+endif ()
