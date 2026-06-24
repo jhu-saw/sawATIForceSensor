@@ -1,5 +1,5 @@
 #
-# (C) Copyright 2013-2023 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2013-2026 Johns Hopkins University (JHU), All Rights Reserved.
 #
 # --- begin cisst license - do not edit ---
 #
@@ -18,16 +18,12 @@ set (REQUIRED_CISST_LIBRARIES
      cisstMultiTask
      cisstMultiTaskQt
      cisstParameterTypes
-     cisstParameterTypesQt
-     cisstQt)
+     cisstParameterTypesQt)
 
 # cisst
-find_package (cisst REQUIRED ${REQUIRED_CISST_LIBRARIES})
+find_package (cisst COMPONENTS ${REQUIRED_CISST_LIBRARIES})
 
-if (cisst_FOUND_AS_REQUIRED)
-
-  # cisst
-  include (${CISST_USE_FILE})
+if (cisst_FOUND)
 
   if (CISST_HAS_XML)
     set(REQUIRED_CISST_LIBRARIES ${REQUIRED_CISST_LIBRARIES} cisstCommonXML)
@@ -35,27 +31,27 @@ if (cisst_FOUND_AS_REQUIRED)
 
   # for Qt generated header files
   include_directories (${CMAKE_CURRENT_BINARY_DIR})
-  if (CISST_HAS_QT4)
-    qt4_wrap_cpp(SAW_ATINETFT_QT_WRAP_CPP
-                  ${sawATIForceSensor_HEADER_DIR}/mtsATINetFTQtWidget.h
-                  ${sawATIForceSensor_HEADER_DIR}/sawATINetFTSimulatorQtWidget.h
-                  )
-  else (CISST_HAS_QT4)
-    set (CMAKE_AUTOMOC ON)
-  endif (CISST_HAS_QT4)
+  set (CMAKE_AUTOMOC ON)
 
-  add_library(sawATIForceSensorQt
-               ${sawATIForceSensor_HEADER_DIR}/sawATIForceSensorQtExport.h
-               ${sawATIForceSensor_HEADER_DIR}/mtsATINetFTQtWidget.h
-               ${sawATIForceSensor_HEADER_DIR}/sawATINetFTSimulatorQtWidget.h
+  add_library (
+    sawATIForceSensorQt
+    ${sawATIForceSensor_HEADER_DIR}/sawATIForceSensorQtExport.h
+    ${sawATIForceSensor_HEADER_DIR}/mtsATINetFTQtWidget.h
+    ${sawATIForceSensor_HEADER_DIR}/sawATINetFTSimulatorQtWidget.h
+    mtsATINetFTQtWidget.cpp
+    sawATINetFTSimulatorQtWidget.cpp)
 
-               mtsATINetFTQtWidget.cpp
-               sawATINetFTSimulatorQtWidget.cpp
-               ${SAW_ATINETFT_QT_WRAP_CPP})
-  set_target_properties (sawATIForceSensorQt PROPERTIES
-                         VERSION ${sawATIForceSensor_VERSION}
-                         FOLDER "sawATIForceSensor")
-  cisst_target_link_libraries(sawATIForceSensorQt ${REQUIRED_CISST_LIBRARIES})
+  set_target_properties (
+    sawATIForceSensorQt
+    PROPERTIES
+    VERSION ${sawATIForceSensor_VERSION}
+    FOLDER "sawATIForceSensor")
+
+  if (CISST_HAS_XML)
+    target_link_libraries(sawATIForceSensorQt ${cisst_LIBRARIES} cisst::cisstCommonXML)
+  else (CISST_HAS_XML)
+    target_link_libraries(sawATIForceSensorQt ${cisst_LIBRARIES})
+  endif (CISST_HAS_XML)
 
   # make sure the new library is known by the parent folder to add to the config file
   set (sawATIForceSensorQt_LIBRARIES sawATIForceSensorQt PARENT_SCOPE)
@@ -65,6 +61,6 @@ if (cisst_FOUND_AS_REQUIRED)
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib)
 
-else (cisst_FOUND_AS_REQUIRED)
+else (cisst_FOUND)
   message ("Information: code will not be compiled, it requires ${REQUIRED_CISST_LIBRARIES}")
-endif (cisst_FOUND_AS_REQUIRED)
+endif (cisst_FOUND)

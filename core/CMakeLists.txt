@@ -13,7 +13,7 @@ cmake_minimum_required(VERSION 3.10)
 project (sawATIForceSensorCore VERSION 2.0.0)
 
 find_package (cisst REQUIRED)
-include (${CISST_USE_FILE})
+
 cisst_cpack_settings (
   VENDOR "JHU"
   MAINTAINER "anton.deguet@jhu.edu")

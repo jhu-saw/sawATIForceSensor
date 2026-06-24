@@ -2,7 +2,7 @@
 # Author(s):  Preetham Chalasani
 # Created on: 2014-08-18
 #
-# (C) Copyright 2014-2023 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2014-2026 Johns Hopkins University (JHU), All Rights Reserved.
 #
 # --- begin cisst license - do not edit ---
 #
@@ -15,20 +15,27 @@
 cmake_minimum_required (VERSION 3.10)
 project (sawATIForceSensor VERSION 2.0.0)
 
+# to find XML setting
+find_package (cisst REQUIRED)
+
 set (REQUIRED_CISST_LIBRARIES
-     cisstCommon
-     cisstVector
-     cisstOSAbstraction
-     cisstMultiTask
-     cisstParameterTypes
-     )
+  cisstCommon
+  cisstVector
+  cisstOSAbstraction
+  cisstMultiTask
+  cisstParameterTypes
+)
 
-find_package (cisst 1.2.0 REQUIRED ${REQUIRED_CISST_LIBRARIES})
+if (CISST_HAS_XML)
+  set (REQUIRED_CISST_LIBRARIES ${REQUIRED_CISST_LIBRARIES} cisstCommonXML)
+else (CISST_HAS_XML)
+  message ("Information: sawATIForceSensor compiled without XML support -- cannot use XML config files")
+endif (CISST_HAS_XML)
 
-if (cisst_FOUND_AS_REQUIRED)
+# to define actual libraries and targets based on XML
+find_package (cisst 1.2.0 COMPONENTS ${REQUIRED_CISST_LIBRARIES})
 
-  # load cisst configuration
-  include (${CISST_USE_FILE})
+if (cisst_FOUND)
 
   # catkin/ROS paths
   cisst_set_output_path ()
@@ -54,19 +61,16 @@ if (cisst_FOUND_AS_REQUIRED)
        code/mtsATINetFTConfig.cpp
        )
 
-  if (CISST_HAS_XML)
-    set(REQUIRED_CISST_LIBRARIES ${REQUIRED_CISST_LIBRARIES} cisstCommonXML)
-  else (CISST_HAS_XML)
-    message ("Information: sawATIForceSensor compiled without XML support -- cannot use XML config files")
-  endif (CISST_HAS_XML)
-
   add_library (sawATIForceSensor ${HEADER_FILES} ${SOURCE_FILES})
 
-  set_target_properties (sawATIForceSensor PROPERTIES
-                         VERSION ${sawATIForceSensor_VERSION}
-                         FOLDER "sawATIForceSensor")
+  set_target_properties (sawATIForceSensor
+    PROPERTIES
+    VERSION ${sawATIForceSensor_VERSION}
+    FOLDER "sawATIForceSensor")
 
-  cisst_target_link_libraries (sawATIForceSensor ${REQUIRED_CISST_LIBRARIES})
+  target_link_libraries (
+    sawATIForceSensor
+    ${cisst_LIBRARIES})
 
   # add Qt code
   if (CISST_HAS_QT)
@@ -89,6 +93,6 @@ if (cisst_FOUND_AS_REQUIRED)
            LIBRARY DESTINATION lib
            ARCHIVE DESTINATION lib)
 
-else (cisst_FOUND_AS_REQUIRED)
+else (cisst_FOUND)
   message ("Information: code in ${CMAKE_CURRENT_SOURCE_DIR} will not be compiled, it requires ${REQUIRED_CISST_LIBRARIES}")
-endif (cisst_FOUND_AS_REQUIRED)
+endif (cisst_FOUND)
