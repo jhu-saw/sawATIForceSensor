@@ -1,6 +1,13 @@
 Change log
 ==========
 
+2.1.0 (TBD)
+===========
+
+* Build:
+  * Updated CMake configuration for the current cisst release.
+  * Examples are compiled only when Qt is available.
+
 2.0.0 (2021-06-17)
 ==================
 
