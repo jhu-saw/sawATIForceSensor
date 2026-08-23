@@ -1,8 +1,8 @@
 Change log
 ==========
 
-2.1.0 (TBD)
-===========
+2.1.0 (2026-08-22)
+==================
 
 * Build:
   * Updated CMake configuration for the current cisst release.
