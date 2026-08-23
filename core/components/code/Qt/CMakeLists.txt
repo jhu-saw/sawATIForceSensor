@@ -25,10 +25,6 @@ find_package (cisst COMPONENTS ${REQUIRED_CISST_LIBRARIES})
 
 if (cisst_FOUND)
 
-  if (CISST_HAS_XML)
-    set(REQUIRED_CISST_LIBRARIES ${REQUIRED_CISST_LIBRARIES} cisstCommonXML)
-  endif (CISST_HAS_XML)
-
   # for Qt generated header files
   include_directories (${CMAKE_CURRENT_BINARY_DIR})
   set (CMAKE_AUTOMOC ON)
@@ -47,11 +43,7 @@ if (cisst_FOUND)
     VERSION ${sawATIForceSensor_VERSION}
     FOLDER "sawATIForceSensor")
 
-  if (CISST_HAS_XML)
-    target_link_libraries(sawATIForceSensorQt ${cisst_LIBRARIES} cisst::cisstCommonXML)
-  else (CISST_HAS_XML)
-    target_link_libraries(sawATIForceSensorQt ${cisst_LIBRARIES})
-  endif (CISST_HAS_XML)
+  target_link_libraries(sawATIForceSensorQt ${cisst_LIBRARIES})
 
   # make sure the new library is known by the parent folder to add to the config file
   set (sawATIForceSensorQt_LIBRARIES sawATIForceSensorQt PARENT_SCOPE)
